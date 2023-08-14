@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "@supabase/supabase-js": "^2.32.0",
+    "@types/node": "^20.5.0",
+    "discord.js": "^14.12.1",
+    "dotenv": "^16.3.1",
+    "nodemon": "^3.0.1",
+    "typescript": "^5.1.6"
+  },
+  "type": "module",
+  "name": "haq-bot",
+  "description": "",
+  "version": "1.0.0",
+  "main": "dist/index.ts",
+  "devDependencies": {
+    "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+  "dev": "nodemon",
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC"
+}
