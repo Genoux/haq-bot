@@ -7,17 +7,32 @@ import path from "path";
 
 config();
 
+// // Define the necessary intents
+// const intents = new Intents([
+//   Intents.FLAGS.GUILDS,
+//   Intents.FLAGS.GUILD_MEMBERS
+// ]);
+
+//const client = new Client({ intents });
+
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 const commands = new Collection();
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 const buttonHandlers = {};
 
-client.on("ready", () => console.log(`${client.user.tag} has logged in!`));
+client.on("ready", async () => {
+ // const guild = client.guilds.cache.get('YOUR_GUILD_ID');
+ // await guild.members.fetch();
+  
+  //console.log(`Fetched ${guild.members.cache.size} members`);
+  
+  console.log(`${client.user.tag} has logged in!`)
+});
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isCommand()) {
@@ -28,14 +43,13 @@ client.on("interactionCreate", async (interaction) => {
     }
   } else if (interaction.isButton()) {
     const handler = buttonHandlers[interaction.customId];
-    console.log("client.on - handler:", handler);
     if (handler) {
       try {
         await handler(interaction);
       } catch (error) {
         console.error(`Error handling button: ${interaction.customId}.`, error);
         await interaction.reply({
-          content: "There was an error handling the button click!",
+          content: error.toString(),
           ephemeral: true,
         });
       }
@@ -49,23 +63,25 @@ async function main() {
     .readdirSync(path.join(dirname, "./commands"))
     .filter((file) => file.endsWith(".js"));
 
-    for (const file of commandFiles) {
-      const command = (await import(`./commands/${file}`)).default;
-      commands.set(command.data.name, command);
-      
-      if (command.buttons && typeof command.buttons === 'object') {
-          for (const [buttonId, handler] of Object.entries(command.buttons)) {
-              if (typeof handler === 'function') {
-                  buttonHandlers[buttonId] = handler;
-              } else {
-                  console.warn(`Handler for buttonId '${buttonId}' is not a function.`);
-              }
-          }
-      } else {
-          console.warn(`Command ${command.data.name} does not have a valid buttons object.`);
+  for (const file of commandFiles) {
+    const command = (await import(`./commands/${file}`)).default;
+    commands.set(command.data.name, command);
+
+    if (command.buttons && typeof command.buttons === "object") {
+      for (const [buttonId, handler] of Object.entries(command.buttons)) {
+        if (typeof handler === "function") {
+          buttonHandlers[buttonId] = handler;
+        } else {
+          console.warn(`Handler for buttonId '${buttonId}' is not a function.`);
+        }
       }
+    } else {
+      console.warn(
+        `Command ${command.data.name} does not have a valid buttons object.`
+      );
+    }
   }
-  
+
   try {
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
       body: Array.from(commands.values()).map((cmd) => cmd.data),

@@ -18,7 +18,7 @@ export const buttons = {
 const commandBuilder = new SlashCommandBuilder()
   .setName("resetchannels")
   .setDescription(
-    "Resets various server settings, including renaming channels."
+    "Deletes voice and text channels for teams in specified categories."
   );
 
 const execute = async (interaction) => {
@@ -39,13 +39,15 @@ const execute = async (interaction) => {
       .setStyle(4)
   );
 
-  await interaction.reply({
-    content: "Are you sure you want to reset server settings?",
-    components: [row],
-  });
+  if (!interaction.replied && !interaction.deferred) {
+    await interaction.reply({
+      content: "Are you sure you want to execute the resetchannels command? This will delete all voice and text channels designated for teams in the specified categories. This action cannot be undone.",
+      components: [row],
+    });
+  }
 };
 
-const resetchannels = async (interaction) => {
+export const resetchannels = async (interaction) => {
   // The ID of the desired category (sub-dropdown)
   const categoryIds = ["1080911803854356670", "1109480250108289124"];
 
@@ -72,10 +74,11 @@ const resetchannels = async (interaction) => {
       }
   }
 
-  await interaction.update({
-    content: "Server settings reset successfully!",
-    components: [],
-  });
+  // if(interaction.replied && interaction.deferred) return
+  // await interaction.update({
+  //   content: "Server settings reset successfully!",
+  //   components: [],
+  // });
 };
 
 export default {
