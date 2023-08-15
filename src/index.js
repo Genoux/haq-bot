@@ -1,9 +1,9 @@
 import { config } from "dotenv";
 import { Client, GatewayIntentBits, Routes, Collection } from "discord.js";
 import { REST } from "@discordjs/rest";
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import path from 'path';
+import { fileURLToPath } from "url";
+import fs from "fs";
+import path from "path";
 
 config();
 
@@ -15,41 +15,60 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const commands = new Collection();
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
+const buttonHandlers = {};
+
 client.on("ready", () => console.log(`${client.user.tag} has logged in!`));
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) {
-      console.log("Interaction is not a chat input command. Ignoring.");
-      return;
-  }
-
-  const command = commands.get(interaction.commandName);
-
-  if (!command) {
-      console.log(`No command found for name: ${interaction.commandName}. Ignoring.`);
-      return;
-  }
-
-  try {
+  if (interaction.isCommand()) {
+    const command = commands.get(interaction.commandName);
+    if (command && typeof command.execute === "function") {
+      // ... (rest of the command handling logic)
       await command.execute(interaction);
-  } catch (error) {
-      console.error(`Error executing command: ${interaction.commandName}.`, error);
-      await interaction.reply({ content: 'There was an error executing that command!', ephemeral: true });
+    }
+  } else if (interaction.isButton()) {
+    const handler = buttonHandlers[interaction.customId];
+    console.log("client.on - handler:", handler);
+    if (handler) {
+      try {
+        await handler(interaction);
+      } catch (error) {
+        console.error(`Error handling button: ${interaction.customId}.`, error);
+        await interaction.reply({
+          content: "There was an error handling the button click!",
+          ephemeral: true,
+        });
+      }
+    }
   }
 });
 
 async function main() {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
-  const commandFiles = fs.readdirSync(path.join(dirname, './commands')).filter(file => file.endsWith('.js'));
+  const commandFiles = fs
+    .readdirSync(path.join(dirname, "./commands"))
+    .filter((file) => file.endsWith(".js"));
 
-  for (const file of commandFiles) {
-    const command = (await import(`./commands/${file}`)).default;
-    commands.set(command.data.name, command);
+    for (const file of commandFiles) {
+      const command = (await import(`./commands/${file}`)).default;
+      commands.set(command.data.name, command);
+      
+      if (command.buttons && typeof command.buttons === 'object') {
+          for (const [buttonId, handler] of Object.entries(command.buttons)) {
+              if (typeof handler === 'function') {
+                  buttonHandlers[buttonId] = handler;
+              } else {
+                  console.warn(`Handler for buttonId '${buttonId}' is not a function.`);
+              }
+          }
+      } else {
+          console.warn(`Command ${command.data.name} does not have a valid buttons object.`);
+      }
   }
-
+  
   try {
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
-      body: Array.from(commands.values()).map(cmd => cmd.data),
+      body: Array.from(commands.values()).map((cmd) => cmd.data),
     });
     client.login(process.env.TOKEN);
   } catch (err) {
