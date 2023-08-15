@@ -85,4 +85,5 @@ export default {
   data: commandBuilder.toJSON(),
   buttons,
   execute,
+  cooldown: 10
 };

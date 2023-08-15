@@ -9,6 +9,7 @@ const execute = async (interaction) => {
 };
 
 export default {
-    data: commandBuilder.toJSON(),
-    execute,
+  data: commandBuilder.toJSON(),
+  execute,
+  cooldown: 0
 };
