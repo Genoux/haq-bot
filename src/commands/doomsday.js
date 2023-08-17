@@ -21,7 +21,7 @@ export const buttons = {
 
     await doomsday(interaction);
     await resetchannels(interaction);
-    await cleartags(interaction);
+    //await cleartags(interaction);
     await deleteRoles(interaction);
 
     await interaction.editReply({

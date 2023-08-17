@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { createApprovedChannel } from "../helpers/channelsManager.js";
+import { deleteApprovedChannel } from "../helpers/channelsManager.js";
 import supabase from "../supabase.js"; // Adjust this import to where your supabase client is initialized
 import {
   ActionRowBuilder,
@@ -9,14 +9,14 @@ import {
 } from "discord.js";
 
 const cancelButton = new ButtonBuilder()
-  .setCustomId("approve_cancel")
+  .setCustomId("reject_cancel")
   .setLabel("Cancel")
   .setStyle(4);
 
 const cancelRow = new ActionRowBuilder().addComponents(cancelButton);
 
 const confirmButton = new ButtonBuilder()
-  .setCustomId("approve_confirm")
+  .setCustomId("reject_confirm")
   .setLabel("Confirm")
   .setStyle(1); // Primary button style
 
@@ -30,11 +30,11 @@ let selectMenuRow = null;
 let selectedValues = [];
 
 const commandBuilder = new SlashCommandBuilder()
-  .setName("approve")
+  .setName("reject")
   .setDescription("Approve inscriptions.");
 
 export const buttons = {
-  approve_confirm: async (interaction) => {
+  reject_confirm: async (interaction) => {
     try {
       await interaction.deferUpdate();
 
@@ -44,6 +44,7 @@ export const buttons = {
       });
 
       const selections = selectedValues.map((value) => JSON.parse(value));
+      console.log("reject_confirm: - selections:", selections);
 
       if (selections.length === 0) {
         await interaction.editReply({
@@ -53,13 +54,14 @@ export const buttons = {
       }
 
       for (const elm of selections) {
-        console.log("approve_confirm: - elm:", elm);
+      console.log("reject_confirm: - elm:", elm);
+
         const { error } = await supabase
           .from("inscriptions")
-          .update({ approved: true })
+          .update({ approved: false })
           .eq("id", elm.id);
 
-        await createApprovedChannel(
+        await deleteApprovedChannel(
           interaction.guild,
           elm.name,
           "1109480250108289124",
@@ -73,7 +75,7 @@ export const buttons = {
       }
 
       await interaction.editReply({
-        content: `The inscriptions have been successfully approved.`,
+        content: `The inscriptions have been successfully rejected.`,
         ephemeral: true,
         components: [],
       });
@@ -85,13 +87,13 @@ export const buttons = {
     }
   },
 
-  approve_cancel: async (interaction) => {
+  reject_cancel: async (interaction) => {
     await interaction.message.delete();
   },
 };
 
 export const selectMenus = {
-  approve_inscription: async (interaction) => {
+  reject_inscription: async (interaction) => {
     selectedValues = interaction.values;
     const namesArray = selectedValues.map((jsonString) => {
       const valueObject = JSON.parse(jsonString);
@@ -101,7 +103,7 @@ export const selectMenus = {
     const namesString = namesArray.join(", ");
 
     await interaction.update({
-      content: `Confirm the selection of the inscription **${namesString}**.`,
+      content: `Confirm the selection of the inscription **${namesString}** to reject`,
       components: [buttonsRow],
     });
   },
@@ -111,12 +113,11 @@ const execute = async (interaction) => {
   const { data: inscriptions, error } = await supabase
     .from("inscriptions")
     .select("*")
-    .eq("approved", false);
-  console.log("inscriptions:", inscriptions);
+    .eq("approved", true);
 
   if (inscriptions.length === 0) {
     await interaction.reply({
-      content: "There are no inscriptions to approve.",
+      content: "There are no inscriptions to reject.",
     });
     return;
   }
@@ -136,8 +137,8 @@ const execute = async (interaction) => {
     .slice(0, 25);
 
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("approve_inscription")
-    .setPlaceholder("Select an inscription to approve")
+    .setCustomId("reject_inscription")
+    .setPlaceholder("Select an inscription to reject")
     .setMinValues(1)
     .setMaxValues(inscriptions.length)
     .addOptions(options);
@@ -154,7 +155,7 @@ const execute = async (interaction) => {
   }
 
   await interaction.reply({
-    content: "Select an inscription to approve:",
+    content: "Select an inscription to reject:",
     components: [selectMenuRow, cancelRow],
   });
 };
