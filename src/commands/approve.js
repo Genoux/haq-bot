@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
+import { createApprovedChannel } from "../helpers/approvedChannels.js";
 import supabase from "../supabase.js"; // Adjust this import to where your supabase client is initialized
 import {
   ActionRowBuilder,
@@ -11,6 +12,8 @@ const cancelButton = new ButtonBuilder()
   .setCustomId("approve_cancel")
   .setLabel("Cancel")
   .setStyle(4);
+
+const cancelRow = new ActionRowBuilder().addComponents(cancelButton);
 
 const confirmButton = new ButtonBuilder()
   .setCustomId("approve_confirm")
@@ -32,44 +35,53 @@ const commandBuilder = new SlashCommandBuilder()
 
 export const buttons = {
   approve_confirm: async (interaction) => {
-    const selections = selectedValues.map((value) => JSON.parse(value));
+    try {
+      await interaction.deferUpdate();
 
-    if (selections.length === 0) {
-      await interaction.reply({
-        content: "No inscription ID selected.",
-        ephemeral: true,
+      await interaction.editReply({
+        content: "Loading...",
+        components: [],
       });
-      return;
-    }
 
-    let hasErrorOccurred = false;
+      const selections = selectedValues.map((value) => JSON.parse(value));
 
-    for (const elm of selections) {
-      console.log("approve_confirm: - elm:", elm);
-      const { error } = await supabase
-        .from("inscriptions")
-        .update({ approved: true })
-        .eq("id", elm.id);
-
-      if (error) {
-        console.error("Error updating inscription:", error);
-        hasErrorOccurred = true;
+      if (selections.length === 0) {
+        await interaction.editReply({
+          content: "No inscription ID selected.",
+        });
+        return;
       }
-    }
 
-    // Send a single update after all updates are attempted
-    if (hasErrorOccurred) {
-      await interaction.update({
-        content: `An error occurred while approving the inscription.`,
-        ephemeral: true,
-        components: [], // This removes all components from the message
-      });
-    } else {
-      await interaction.update({
+      for (const elm of selections) {
+        console.log("approve_confirm: - elm:", elm);
+        const { error } = await supabase
+          .from("inscriptions")
+          .update({ approved: true })
+          .eq("id", elm.id);
+
+        await createApprovedChannel(
+          interaction.guild,
+          elm.name,
+          "1109480250108289124",
+          "1080911803854356670"
+        );
+
+        if (error) {
+          console.error("Error updating inscription:", error);
+          hasErrorOccurred = true;
+        }
+      }
+
+      await interaction.editReply({
         content: `The inscriptions have been successfully approved.`,
         ephemeral: true,
-        components: [], // This removes all components from the message
+        components: [],
       });
+    } catch (error) {
+      console.error(error);
+      await interaction.reply(
+        "There was an error creating the role. Please try again later."
+      );
     }
   },
 
@@ -81,51 +93,19 @@ export const buttons = {
 export const selectMenus = {
   approve_inscription: async (interaction) => {
     selectedValues = interaction.values;
-
-    // Parse each JSON-formatted string in the selectedValues array,
-    // and then extract the 'name' property of each parsed object
     const namesArray = selectedValues.map((jsonString) => {
       const valueObject = JSON.parse(jsonString);
       return valueObject.name;
     });
 
-    console.log("'approve_inscription': - namesArray:", namesArray);
-
-    // You can join the namesArray to form a single string if needed
     const namesString = namesArray.join(", ");
 
     await interaction.update({
       content: `Confirm the selection of the inscription **${namesString}**.`,
-      ephemeral: true,
-      components: [selectMenuRow, buttonsRow],
+      components: [buttonsRow],
     });
-
-    //interaction.deferUpdate()
-    // return
-    // Do nothing when the select menu is used.
-    // Wait for the user to press the "Confirm" button to process the selection.
   },
 };
-
-// export const selectMenus = {
-//   'approve_inscription': async (interaction) => {
-//     await interaction.deferUpdate();
-//     // console.log("approve_inscription: - interaction:", interaction);
-//     // const inscriptionId = interaction.values[0];
-
-//     // const { error } = await supabase
-//     //   .from('inscriptions')
-//     //   .update({ approved: true })
-//     //   .eq('id', inscriptionId);
-
-//     // if (error) {
-//     //   console.error("Error updating inscription:", error);
-//     //   await interaction.update({ content: "An error occurred while approving the inscription.", ephemeral: true });
-//     // } else {
-//     //   await interaction.update({ content: "The inscription has been successfully approved.", ephemeral: true,  components: [] });
-//     // }
-//   }
-// };
 
 const execute = async (interaction) => {
   const { data: inscriptions, error } = await supabase
@@ -137,22 +117,23 @@ const execute = async (interaction) => {
   if (inscriptions.length === 0) {
     await interaction.reply({
       content: "There are no inscriptions to approve.",
-      ephemeral: true,
     });
     return;
   }
 
-  const options = inscriptions.map((inscription) =>
-    new StringSelectMenuOptionBuilder()
-      .setLabel(inscription.team_name)
-      .setDescription(`ID: ${inscription.id}`)
-      .setValue(
-        JSON.stringify({
-          id: inscription.id.toString(),
-          name: inscription.team_name.toString(),
-        })
-      )
-  );
+  const options = inscriptions
+    .map((inscription) =>
+      new StringSelectMenuOptionBuilder()
+        .setLabel(inscription.team_name)
+        .setDescription(`ID: ${inscription.id}`)
+        .setValue(
+          JSON.stringify({
+            id: inscription.id.toString(),
+            name: inscription.team_name.toString(),
+          })
+        )
+    )
+    .slice(0, 25);
 
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId("approve_inscription")
@@ -174,7 +155,7 @@ const execute = async (interaction) => {
 
   await interaction.reply({
     content: "Select an inscription to approve:",
-    components: [selectMenuRow, buttonsRow],
+    components: [selectMenuRow, cancelRow],
   });
 };
 

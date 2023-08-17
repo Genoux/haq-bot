@@ -1,7 +1,7 @@
 // In a file named `ping.js`
 import { SlashCommandBuilder } from '@discordjs/builders';
 
-const commandData = new SlashCommandBuilder()
+const commandBuilder = new SlashCommandBuilder()
   .setName('ping')
   .setDescription('Replies with Pong!');
 
@@ -10,7 +10,7 @@ const execute = async (interaction) => {
 };
 
 export default {
-  data: commandData.toJSON(),
+  data: commandBuilder.toJSON(),
   execute,
   cooldown: 10
 };

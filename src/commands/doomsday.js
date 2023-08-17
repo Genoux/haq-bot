@@ -6,13 +6,28 @@ import discord, {
 } from "discord.js";
 import { resetchannels } from "./resetchannels.js";
 import { cleartags } from "./cleartags.js";
+import { deleteRoles } from "./deleteroles.js";
+
 const { MessageActionRow, MessageButton } = discord;
 
 export const buttons = {
   doomsday_confirm: async (interaction) => {
+    await interaction.deferUpdate();
+
+    await interaction.editReply({
+      content: "Loading...",
+      components: [],
+    });
+
     await doomsday(interaction);
     await resetchannels(interaction);
     await cleartags(interaction);
+    await deleteRoles(interaction);
+
+    await interaction.editReply({
+      content: "Doomsday reset done!",
+      components: [],
+    });
   },
   doomsday_cancel: async (interaction) => {
     await interaction.message.delete();
@@ -24,12 +39,6 @@ const commandBuilder = new SlashCommandBuilder()
   .setDescription("The last day of the world's existence.");
 
 const execute = async (interaction) => {
-  const guild = interaction.guild;
-  if (!guild) {
-    await interaction.reply("This command can only be used in a server.");
-    return;
-  }
-
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("doomsday_confirm")
@@ -41,13 +50,11 @@ const execute = async (interaction) => {
       .setStyle(4)
   );
 
-  if (!interaction.replied && !interaction.deferred) {
-    await interaction.reply({
-      content:
-        "Are you sure you want to initiate the Doomsday command? This will clear all channels and messages in the specified categories and cannot be undone.",
-      components: [row],
-    });
-  }
+  await interaction.reply({
+    content:
+      "Are you sure you want to initiate the Doomsday command? This will clear all channels and messages in the specified categories and cannot be undone.",
+    components: [row],
+  });
 };
 
 const doomsday = async (interaction) => {
@@ -75,16 +82,11 @@ const doomsday = async (interaction) => {
       }
     }
   });
-
-  await interaction.update({
-    content: "Doomsday reset done!",
-    components: [],
-  });
 };
 
 export default {
   data: commandBuilder.toJSON(),
   buttons,
   execute,
-  cooldown: 10
+  cooldown: 10,
 };

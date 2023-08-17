@@ -3,7 +3,20 @@ import { ActionRowBuilder, ButtonBuilder } from "discord.js";
 
 export const buttons = {
   cleartags_confirm: async (interaction) => {
+    await interaction.deferUpdate();
+
+    await interaction.editReply({
+      content: "Loading...",
+      components: [],
+    });
+
     await cleartags(interaction);
+
+    await interaction.editReply({
+      content:
+        "User roles have been cleared, except for 'Moderator' and 'Host' roles.",
+      components: [],
+    });
   },
   cleartags_cancel: async (interaction) => {
     await interaction.message.delete();
@@ -17,12 +30,6 @@ const commandBuilder = new SlashCommandBuilder()
   );
 
 const execute = async (interaction) => {
-  const guild = interaction.guild;
-  if (!guild) {
-    await interaction.reply("This command can only be used in a server.");
-    return;
-  }
-
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("cleartags_confirm")
@@ -44,10 +51,6 @@ const execute = async (interaction) => {
 };
 
 export const cleartags = async (interaction) => {
-  if (!interaction.guild) {
-    console.log("No guild available");
-    return;
-  }
   const exemptRoles = ["Mod", "Hosts", "haq-bot"];
 
   const members = await interaction.guild.members.fetch();
@@ -61,14 +64,6 @@ export const cleartags = async (interaction) => {
 
       await member.roles.remove(userRoles).catch(console.error);
     });
-
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.update({
-        content:
-          "User roles have been cleared, except for 'Moderator' and 'Host' roles.",
-        components: [],
-      });
-    }
   } catch (error) {
     console.error("Error in cleartags:", error);
   }
@@ -78,5 +73,5 @@ export default {
   data: commandBuilder.toJSON(),
   buttons,
   execute,
-  cooldown: 10
+  cooldown: 10,
 };
