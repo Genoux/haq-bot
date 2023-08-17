@@ -74,11 +74,11 @@ export const resetchannels = async (interaction) => {
       }
   }
 
-  // if(interaction.replied && interaction.deferred) return
-  // await interaction.update({
-  //   content: "Server settings reset successfully!",
-  //   components: [],
-  // });
+  if(interaction.replied && interaction.deferred) return
+  await interaction.update({
+    content: "Server settings reset successfully!",
+    components: [],
+  });
 };
 
 export default {
