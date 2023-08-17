@@ -1,5 +1,5 @@
 // This function creates a role with the given name and color in the specified guild
-async function createRole(guild, roleName, color = 'FF0000') {
+async function createRole(guild, roleName, color = null) {
   try {
     // Check if a role with the specified roleName already exists in the guild
     const existingRole = guild.roles.cache.find(role => role.name === roleName);
@@ -8,6 +8,11 @@ async function createRole(guild, roleName, color = 'FF0000') {
     if (existingRole) {
       console.log('Role already exists:', existingRole.name);
       return existingRole;
+    }
+
+    // If no color is specified, generate a random color
+    if (color === null) {
+      color = '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16);
     }
 
     // If the role does not already exist, create a new role
