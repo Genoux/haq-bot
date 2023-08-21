@@ -3,17 +3,18 @@ import {
   Client,
   GatewayIntentBits,
   Routes,
-  Collection,
-  EmbedBuilder,
+  Collection
 } from "discord.js";
 import { REST } from "@discordjs/rest";
 import { fileURLToPath } from "url";
 import { newMember } from "./helpers/memberManager.js";
-import supabase from "./supabase.js";
+
+import supabaseModule from "./supabase.js";
+const { supabase, draftDB } = supabaseModule;
 import fs from "fs";
 import path from "path";
 import { createTeamEmbed } from "./helpers/embedManager.js";
-import fetch from "node-fetch";
+import { startWebhookServer } from './helpers/webhookHandler.js';
 
 config();
 
@@ -23,9 +24,10 @@ const GUILD_ID = process.env.GUILD_ID;
 
 const cooldowns = new Map(); // Collection for storing cooldowns
 
-const client = new Client({
+export const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
+
 const commands = new Collection();
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
@@ -39,97 +41,35 @@ client.on("ready", async () => {
 
   const channel = client.channels.cache.find(ch => ch.name === 'notifications');
 
-  // const payload = {
-  //   approved: false,
-  //   captain: "d",
-  //   coaches: [
-  //     { IGN: "ddww", discord: "wd" },
-  //     { IGN: "qq", discord: "d" },
-  //   ],
-  //   created_at: "2023-08-17T21:31:24.33597+00:00",
-  //   email: "qwdqwd@j.lol",
-  //   id: 217,
-  //   name: "qwddqw",
-  //   players: [
-  //     {
-  //       discord: "d",
-  //       ign: "Isles1",
-  //       opgg: "https://www.op.gg/summoners/na/Isles1",
-  //     },
-  //     {
-  //       discord: "wd",
-  //       ign: "Isles1",
-  //       opgg: "https://www.op.gg/summoners/na/Isles1",
-  //     },
-  //     {
-  //       discord: "dw",
-  //       ign: "Isles1",
-  //       opgg: "https://www.op.gg/summoners/na/Isles1",
-  //     },
-  //     {
-  //       discord: "wd",
-  //       ign: "Isles1",
-  //       opgg: "https://www.op.gg/summoners/na/Isles1",
-  //     },
-  //     {
-  //       discord: "wd",
-  //       ign: "Isles1",
-  //       opgg: "https://www.op.gg/summoners/na/Isles1",
-  //     },
-  //   ],
-  //   substitutes: [
-  //     {
-  //       discord: "dw",
-  //       ign: "Isles1",
-  //       opgg: "https://www.op.gg/summoners/na/Isles1",
-  //     },
-  //   ],
-  //   team_name: "wddqw",
-  //   elo: 1,
-  // };
-  // const embed = new EmbedBuilder()
-  //   .setTitle("New team registration")
-  //   .setDescription(
-  //     `Team Name: **${payload.team_name || "N/A"}** - Elo: ${payload.elo}`
-  //   )
-  //   .setColor("#DCFC35")
-  //   .setTimestamp();
-
-  // const playersString =
-  //   payload.players
-  //     .map((player) => {
-  //       return `${player.discord} - [OP.GG](${player.opgg}) - ${player.ign}`;
-  //     })
-  //     .join("\n") || "N/A";
-
-  // const substitutesString =
-  //   payload.substitutes
-  //     .map((substitute) => {
-  //       return `${substitute.discord} - ${substitute.ign}`;
-  //     })
-  //     .join("\n") || "N/A";
-
-  // // Format the coaches array into a string
-  // const coachesString =
-  //   payload.coaches
-  //     .map((coach) => {
-  //       return `${coach.IGN} - ${coach.discord}`;
-  //     })
-  //     .join("\n") || "N/A";
-  
-  // embed.addFields([
-  //   {
-  //     name: "Team",
-  //     value:
-  //       "-----------------------------------------------------------------------",
-  //     inline: false,
-  //   },
-  //   { name: "Players", value: playersString, inline: true },
-  //   { name: "Coaches", value: coachesString, inline: true },
-  //   { name: "Substitutes", value: substitutesString, inline: true },
-  // ]);
-
- // channel.send({ embeds: [embed] });
+  draftDB
+  .channel("*")
+  .on(
+    "postgres_changes",
+    {
+      event: "UPDATE",
+      schema: "public",
+      table: "rooms",
+    },
+    async ({ new: payload }) => {
+      console.log("payload:", payload);
+      // Create an embed from the payload
+      if (payload.status === 'done') {
+        console.log('done')
+        const { data: blue } = await supabase.from('teams').select('*').eq('room', payload.id)
+        console.log("blue:", blue);
+      }
+      //const teamEmbed = createTeamEmbed(payload);
+      // Send the embed to the channel
+     // channel.send({ embeds: [teamEmbed] });
+    }
+  )
+  .subscribe((status, err) => {
+    if (!err) {
+      console.log("Subbed to database draft pick", status);
+    } else {
+      console.log(err);
+    }
+  });
 
   supabase
     .channel("*")
@@ -156,6 +96,8 @@ client.on("ready", async () => {
         console.log(err);
       }
     });
+  
+    startWebhookServer();
 });
 
 client.on("guildMemberAdd", async (member) => {

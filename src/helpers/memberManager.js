@@ -48,9 +48,28 @@ export const newMember = async (member) => {
       return;
     }
   }
-  
-  // If no match was found in allMembers and the member is not a captain,
-  // the function will reach this point and simply exit without doing anything.
 };
+
+
+export const newInscription = async () => {
+  const { data } = await supabase
+    .from("inscriptions")
+    .select("team_name, players, coaches, substitutes").eq('approved', true);
+  
+  // Assuming you want to display data for the latest inscription, 
+  // you can take the last item from the data array.
+  const latestInscription = data[data.length - 1];
+
+  if (!latestInscription) {
+    console.log("No new inscriptions found.");
+    return;
+  }
+
+  console.log("Team Name:", latestInscription.team_name);
+  console.log("Players:", latestInscription.players.map(player => player.discord).join(', '));
+  console.log("Coaches:", latestInscription.coaches.map(coach => coach.discord).join(', '));
+  console.log("Substitutes:", latestInscription.substitutes.map(substitute => substitute.discord).join(', '));
+};
+
 
 
