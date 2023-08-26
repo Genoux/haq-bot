@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 import { SlashCommandBuilder } from '@discordjs/builders';
+import fetch from "node-fetch";
 
 config();
 

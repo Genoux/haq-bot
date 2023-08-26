@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { deleteApprovedChannel } from "../helpers/channelsManager.js";
-import supabase from "../supabase.js"; // Adjust this import to where your supabase client is initialized
+import haq_database from "../supabase.js"; // Adjust this import to where your supabase client is initialized
 import {
   ActionRowBuilder,
   StringSelectMenuBuilder,
@@ -56,7 +56,7 @@ export const buttons = {
       for (const elm of selections) {
       console.log("reject_confirm: - elm:", elm);
 
-        const { error } = await supabase
+        const { error } = await haq_database
           .from("inscriptions")
           .update({ approved: false })
           .eq("id", elm.id);
@@ -110,7 +110,7 @@ export const selectMenus = {
 };
 
 const execute = async (interaction) => {
-  const { data: inscriptions, error } = await supabase
+  const { data: inscriptions, error } = await haq_database
     .from("inscriptions")
     .select("*")
     .eq("approved", true);
