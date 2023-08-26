@@ -1,20 +1,11 @@
 import { config } from "dotenv";
-import {
-  Client,
-  GatewayIntentBits,
-  Routes,
-  Collection
-} from "discord.js";
+import { Client, GatewayIntentBits, Routes, Collection } from "discord.js";
 import { REST } from "@discordjs/rest";
 import { fileURLToPath } from "url";
 import { newMember } from "./helpers/memberManager.js";
-
-import supabaseModule from "./supabase.js";
-const { supabase, draftDB } = supabaseModule;
+import { subscribe } from "./helpers/subscription.js";
 import fs from "fs";
 import path from "path";
-import { createTeamEmbed } from "./helpers/embedManager.js";
-import { startWebhookServer } from './helpers/webhookHandler.js';
 
 config();
 
@@ -38,66 +29,8 @@ client.on("ready", async () => {
   console.log(`${client.user.tag} has logged in!`);
   await client.guilds.cache.get(GUILD_ID).commands.fetch();
 
+  subscribe(client);
 
-  const channel = client.channels.cache.find(ch => ch.name === 'notifications');
-
-  draftDB
-  .channel("*")
-  .on(
-    "postgres_changes",
-    {
-      event: "UPDATE",
-      schema: "public",
-      table: "rooms",
-    },
-    async ({ new: payload }) => {
-      console.log("payload:", payload);
-      // Create an embed from the payload
-      if (payload.status === 'done') {
-        console.log('done')
-        const { data: blue } = await supabase.from('teams').select('*').eq('room', payload.id)
-        console.log("blue:", blue);
-      }
-      //const teamEmbed = createTeamEmbed(payload);
-      // Send the embed to the channel
-     // channel.send({ embeds: [teamEmbed] });
-    }
-  )
-  .subscribe((status, err) => {
-    if (!err) {
-      console.log("Subbed to database draft pick", status);
-    } else {
-      console.log(err);
-    }
-  });
-
-  supabase
-    .channel("*")
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "inscriptions",
-      },
-      ({ new: payload }) => {
-        console.log("client.on - payload:", payload);
-        // Create an embed from the payload
-        const teamEmbed = createTeamEmbed(payload);
-
-        // Send the embed to the channel
-        channel.send({ embeds: [teamEmbed] });
-      }
-    )
-    .subscribe((status, err) => {
-      if (!err) {
-        console.log("Subbed to database", status);
-      } else {
-        console.log(err);
-      }
-    });
-  
-    startWebhookServer();
 });
 
 client.on("guildMemberAdd", async (member) => {

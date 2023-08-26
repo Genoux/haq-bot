@@ -5,7 +5,6 @@ import { client } from "../index.js";
 import { EmbedBuilder } from "discord.js";
 import { createDraftDoneEmbed } from "./embedManager.js";
 
-
 config();
 
 const app = express();
@@ -15,18 +14,17 @@ app.use(bodyParser.json());
 
 app.post("/webhook-endpoint", async (req, res) => {
   const payload = req.body;
-  console.log("DATA", payload.data);
 
   if (process.env.DISCORD_WEBHOOK === "false") {
     res.status(200).send("Webhook disabled");
-    return  
-  };
+    return;
+  }
 
   const embed = createDraftDoneEmbed(payload.data);
-  
+
   const channel = client.channels.cache.find((ch) => ch.name === "bot-test");
   if (channel) {
-   // channel.send(payload.data.blue.name.toString());
+    // channel.send(payload.data.blue.name.toString());
     channel.send({ embeds: [embed] });
   }
 

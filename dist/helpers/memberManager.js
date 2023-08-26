@@ -1,6 +1,6 @@
-import supabase from "../supabase.js"; // Adjust this import to where your supabase client is initialized
+import haq_database from "../supabase.js"; // Adjust this import to where your supabase client is initialized
 export const newMember = async (member) => {
-    const { data } = await supabase
+    const { data } = await haq_database
         .from("inscriptions")
         .select("team_name, players, coaches, substitutes, captain").eq('approved', true);
     // Loop through each team
