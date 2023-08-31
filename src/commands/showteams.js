@@ -30,7 +30,7 @@ const execute = async (interaction) => {
     // Generate the message content
     let messageContent = '';
     for (const team of data) {
-      messageContent += `**Team: ${team.name}**\n`; // Replace 'name' with your actual column name for the team name
+      messageContent += `**Team: ${team.team_name}**\n`; // Replace 'name' with your actual column name for the team name
       for (const player of team.players) {
         messageContent += `- ${player.ign}: [OPGG](${player.opgg})\n`;
       }
