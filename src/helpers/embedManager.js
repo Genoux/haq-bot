@@ -97,3 +97,23 @@ export const createDraftDoneEmbed = (data) => {
 
   return embed;
 };
+
+
+export const opggEmbed = (teams) => {
+  const embed = new EmbedBuilder()
+    .setTitle("Approved Teams and Their OPGG")
+    .setDescription("Here are the OPGG links for all approved teams.")
+    .setColor("#DCFC35")
+    .setTimestamp();
+
+  for (const team of teams) {
+    const teamName = team.name || "N/A"; // Replace 'name' with your actual column name for the team name
+    const playersString = formatString(team.players, "discord", "ign", "opgg");
+
+    embed.addFields([
+      { name: `Team: ${teamName}`, value: playersString, inline: false },
+    ]);
+  }
+
+  return embed;
+};

@@ -59,10 +59,21 @@ export const buttons = {
           .update({ approved: false })
           .eq("id", elm.id);
 
+        // Normalize the name from the database by replacing hyphens and converting to lowercase
+        const normalizedElmName = elm.name.replace(/[-\s]/g, "").toLowerCase();
+
         // Loop through all channels in the guild
         interaction.guild.channels.cache.each((channel) => {
-          if (channel.name === elm.name || channel.name === elm.name.toLowerCase()) {
-            console.log("interaction.guild.channels.cache.each - channel.name:", channel.name);
+          // Normalize the channel name by replacing hyphens and converting to lowercase
+          const normalizedChannelName = channel.name
+            .replace(/[-\s]/g, "")
+            .toLowerCase();
+
+          if (normalizedChannelName === normalizedElmName) {
+            console.log(
+              "interaction.guild.channels.cache.each - channel.name:",
+              channel.name
+            );
             // Delete the channel
             channel
               .delete()
@@ -71,11 +82,17 @@ export const buttons = {
           }
         });
 
+        // Loop through all roles in the guild
         interaction.guild.roles.cache.each((role) => {
-          // Check if the role name matches the name in the current selection
-          if (role.name === elm.name) {
+          // Normalize the role name by replacing hyphens and converting to lowercase
+          const normalizedRoleName = role.name
+            .replace(/[-\s]/g, "")
+            .toLowerCase();
+
+          if (normalizedRoleName === normalizedElmName) {
             // Delete the role
-            role.delete()
+            role
+              .delete()
               .then(() => console.log(`Deleted role ${role.name}`))
               .catch(console.error);
           }
