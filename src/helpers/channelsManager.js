@@ -11,7 +11,7 @@ export const createApprovedChannel = async (
   console.log("teamName:", teamName);
   try {
 
-    const role = await createRole(guild, teamName, 'FF0000');
+    const role = await createRole(guild, teamName);
     const permissions = [
       {
         id: guild.id,
