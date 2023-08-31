@@ -126,7 +126,7 @@ const execute = async (interaction) => {
     .map((inscription) =>
       new StringSelectMenuOptionBuilder()
         .setLabel(inscription.team_name)
-        .setDescription(`ID: ${inscription.id}`)
+        .setDescription(`Elo: ${inscription.elo}`)
         .setValue(
           JSON.stringify({
             id: inscription.id.toString(),
