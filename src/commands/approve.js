@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { createApprovedChannel } from "../helpers/channelsManager.js";
-import haq_database from "../supabase.js"; // Adjust this import to where your supabase client is initialized
+import supabaseModule from "../supabase.js";
+const { haq_database } = supabaseModule;
 import {
   ActionRowBuilder,
   StringSelectMenuBuilder,

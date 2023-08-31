@@ -60,6 +60,7 @@ export const deleteApprovedChannel = async (
     const textChannel = guild.channels.cache.find(
       channel => channel.name === teamName && channel.parentId === textCategoryId
     );
+    console.log("textChannel:", textChannel);
     if (textChannel) {
       await textChannel.delete();
       console.log('Text channel has been deleted for the approved team.');

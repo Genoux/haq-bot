@@ -25,7 +25,7 @@ if (process.env.DRAFT_WEBHOOK === "true") {
         console.log("payload:", payload);
         // Create an embed from the payload
         if (payload.status === "done") {
-          const { data: teams } = await draftDB
+          const { data: teams } = await draft_database
             .from("teams")
             .select("*")
             .eq("room", payload.id);
@@ -66,7 +66,7 @@ if (process.env.DRAFT_WEBHOOK === "true") {
     )
     .subscribe((status, err) => {
       if (!err) {
-        console.log("Subbed to database", status);
+        console.log("Subbed to database inscription", status);
       } else {
         console.log(err);
       }
