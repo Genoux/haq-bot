@@ -45,7 +45,6 @@ export const buttons = {
       });
 
       const selections = selectedValues.map((value) => JSON.parse(value));
-      console.log("reject_confirm: - selections:", selections);
 
       if (selections.length === 0) {
         await interaction.editReply({
@@ -55,19 +54,32 @@ export const buttons = {
       }
 
       for (const elm of selections) {
-      console.log("reject_confirm: - elm:", elm);
-
         const { error } = await haq_database
           .from("inscriptions")
           .update({ approved: false })
           .eq("id", elm.id);
 
-        await deleteApprovedChannel(
-          interaction.guild,
-          elm.name,
-          "1109480250108289124",
-          "1080911803854356670"
-        );
+        // Loop through all channels in the guild
+        interaction.guild.channels.cache.each((channel) => {
+          if (channel.name === elm.name || channel.name === elm.name.toLowerCase()) {
+            console.log("interaction.guild.channels.cache.each - channel.name:", channel.name);
+            // Delete the channel
+            channel
+              .delete()
+              .then(() => console.log(`Deleted channel ${channel.name}`))
+              .catch(console.error);
+          }
+        });
+
+        interaction.guild.roles.cache.each((role) => {
+          // Check if the role name matches the name in the current selection
+          if (role.name === elm.name) {
+            // Delete the role
+            role.delete()
+              .then(() => console.log(`Deleted role ${role.name}`))
+              .catch(console.error);
+          }
+        });
 
         if (error) {
           console.error("Error updating inscription:", error);
