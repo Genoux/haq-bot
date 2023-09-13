@@ -30,8 +30,8 @@ const selectMenuHandlers = {};
 client.on("ready", async () => {
   console.log(`${client.user.tag} has logged in!`);
   await client.guilds.cache.get(GUILD_ID).commands.fetch();
+  await server();
   subscribe(client);
-  server(); 
 });
 
 client.on("guildMemberAdd", async (member) => {
