@@ -34,7 +34,6 @@ client.on("ready", async () => {
   server(); 
 });
 
-
 client.on("guildMemberAdd", async (member) => {
   await newMember(member);
 });

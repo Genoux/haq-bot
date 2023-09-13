@@ -113,7 +113,6 @@ const execute = async (interaction) => {
     .from("inscriptions")
     .select("*")
     .eq("approved", false);
-  console.log("inscriptions:", inscriptions);
 
   if (inscriptions.length === 0) {
     await interaction.reply({

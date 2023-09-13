@@ -22,7 +22,6 @@ if (process.env.DRAFT_WEBHOOK === "true") {
         table: "rooms",
       },
       async ({ new: payload }) => {
-        console.log("payload:", payload);
         // Create an embed from the payload
         if (payload.status === "done") {
           const { data: teams } = await draft_database

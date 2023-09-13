@@ -7,10 +7,7 @@ export const createApprovedChannel = async (
   textCategoryId, 
   voiceCategoryId
 ) => {
-  console.log("guild:", guild);
-  console.log("teamName:", teamName);
   try {
-
     const role = await createRole(guild, teamName);
     const permissions = [
       {
@@ -19,8 +16,8 @@ export const createApprovedChannel = async (
       },
       {
         id: role.id,
-        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect], // Allow team role
-      },
+        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.Speak], // Allow team role
+      }
     ];
 
     await guild.channels.create({
@@ -51,16 +48,12 @@ export const deleteApprovedChannel = async (
   textCategoryId,
   voiceCategoryId
 ) => {
-  console.log("guild:", guild);
-  console.log("teamName:", teamName);
-  
   try {
     await deleteRole(guild, teamName);
     // Find and delete the text channel
     const textChannel = guild.channels.cache.find(
       channel => channel.name === teamName && channel.parentId === textCategoryId
     );
-    console.log("textChannel:", textChannel);
     if (textChannel) {
       await textChannel.delete();
       console.log('Text channel has been deleted for the approved team.');

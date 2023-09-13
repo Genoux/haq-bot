@@ -19,8 +19,6 @@ const formatString = (arr, discordProp, ignProp, opggProp) => {
 };
 
 export const createTeamEmbed = (payload) => {
-  console.log("Payload:", payload); // Log the payload to debug
-
   const embed = new EmbedBuilder()
     .setTitle("New team registration")
     .setDescription(

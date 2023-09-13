@@ -10,6 +10,7 @@ async function createRole(guild, roleName) {
     }
 
     const color = '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16);
+    console.log("createRole - color:", color);
 
     const newRole = await guild.roles.create({
         name: roleName,
