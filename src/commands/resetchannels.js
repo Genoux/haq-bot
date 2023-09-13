@@ -8,6 +8,7 @@ export const buttons = {
     await interaction.editReply({
       content: "Loading...",
       components: [],
+      ephemeral: true,
     });
 
     await resetchannels(interaction);
@@ -15,6 +16,7 @@ export const buttons = {
     await interaction.editReply({
       content: "Server settings reset successfully!",
       components: [],
+      ephemeral: true,
     });
   },
   reset_cancel: async (interaction) => {
@@ -41,9 +43,9 @@ const execute = async (interaction) => {
   );
 
   await interaction.reply({
-    content:
-      "Are you sure you want to execute the resetchannels command? This will delete all voice and text channels designated for teams in the specified categories. This action cannot be undone.",
+    content: "Are you sure you want to execute the resetchannels command? This will delete all voice and text channels designated for teams in the specified categories. This action cannot be undone.",
     components: [row],
+    ephemeral: true,
   });
 };
 

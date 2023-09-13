@@ -20,6 +20,7 @@ export const buttons = {
     await interaction.editReply({
       content: "Roles cleared successfully!",
       components: [],
+      ephemeral: true,
     });
   },
 
@@ -44,6 +45,7 @@ const execute = async (interaction) => {
     content:
       "Are you sure you want to delete all roles from the server? This action cannot be undone.",
     components: [row],
+    ephemeral: true,
   });
 };
 export const deleteRoles = async (interaction) => {

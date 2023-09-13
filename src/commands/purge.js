@@ -20,13 +20,17 @@ const execute = async (interaction) => {
       });
     })
     .then(() => {
-      interaction.reply("Deleted all messages.");
+      interaction.reply({
+        content: "Deleted some messages.",
+        ephemeral: true,
+      });
     })
     .catch((err) => {
       console.error(err);
-      interaction.reply(
-        "There was an error trying to prune messages in this channel."
-      );
+      interaction.reply({
+        content: "There was an error trying to prune messages in this channel.",
+        ephemeral: true,
+      });
     });
 };
 

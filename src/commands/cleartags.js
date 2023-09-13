@@ -3,6 +3,7 @@ import { ActionRowBuilder, ButtonBuilder } from "discord.js";
 
 export const buttons = {
   cleartags_confirm: async (interaction) => {
+    if (interaction.deferred) return;
     await interaction.deferUpdate();
 
     await interaction.editReply({
@@ -16,6 +17,7 @@ export const buttons = {
       content:
         "User roles have been cleared, except for 'Moderator' and 'Host' roles.",
       components: [],
+      ephemeral: true,
     });
   },
   cleartags_cancel: async (interaction) => {
@@ -46,6 +48,7 @@ const execute = async (interaction) => {
       content:
         "Are you sure you want to execute the `cleartags` command? This will remove all roles from users, except for those with a 'Moderator' or 'Host' role. This action cannot be undone.",
       components: [row],
+      ephemeral: true,
     });
   }
 };
@@ -59,7 +62,6 @@ export const cleartags = async (interaction) => {
 
     members.forEach(async (member) => {
       const userRoles = member.roles.cache.filter((role) => {
-        console.log("userRoles - role:", role);
         return role.id !== everyoneRole && !exemptRoles.includes(role.name);
       });
 

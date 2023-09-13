@@ -41,6 +41,7 @@ export const buttons = {
 
       await interaction.editReply({
         content: "Loading...",
+        ephemeral: true,
         components: [],
       });
 
@@ -49,6 +50,7 @@ export const buttons = {
       if (selections.length === 0) {
         await interaction.editReply({
           content: "No inscription ID selected.",
+          ephemeral: true,
         });
         return;
       }
@@ -80,9 +82,11 @@ export const buttons = {
       });
     } catch (error) {
       console.error(error);
-      await interaction.reply(
-        "There was an error creating the role. Please try again later."
-      );
+      await interaction.reply({
+        content:
+          "There was an error creating the role. Please try again later.",
+        ephemeral: true,
+      });
     }
   },
 
@@ -103,6 +107,7 @@ export const selectMenus = {
 
     await interaction.update({
       content: `Confirm the selection of the inscription **${namesString}**.`,
+      ephemeral: true,
       components: [buttonsRow],
     });
   },
@@ -117,6 +122,7 @@ const execute = async (interaction) => {
   if (inscriptions.length === 0) {
     await interaction.reply({
       content: "There are no inscriptions to approve.",
+      ephemeral: true,
     });
     return;
   }
@@ -155,6 +161,7 @@ const execute = async (interaction) => {
 
   await interaction.reply({
     content: "Select an inscription to approve:",
+    ephemeral: true,
     components: [selectMenuRow, cancelRow],
   });
 };

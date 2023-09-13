@@ -8,8 +8,6 @@ import { resetchannels } from "./resetchannels.js";
 import { cleartags } from "./cleartags.js";
 import { deleteRoles } from "./deleteroles.js";
 
-const { MessageActionRow, MessageButton } = discord;
-
 export const buttons = {
   doomsday_confirm: async (interaction) => {
     await interaction.deferUpdate();
@@ -27,6 +25,7 @@ export const buttons = {
     await interaction.editReply({
       content: "Doomsday reset done!",
       components: [],
+      ephemeral: true,
     });
   },
   doomsday_cancel: async (interaction) => {
@@ -54,6 +53,7 @@ const execute = async (interaction) => {
     content:
       "Are you sure you want to initiate the Doomsday command? This will clear all channels and messages in the specified categories and cannot be undone.",
     components: [row],
+    ephemeral: true,
   });
 };
 

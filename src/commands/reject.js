@@ -42,6 +42,7 @@ export const buttons = {
       await interaction.editReply({
         content: "Loading...",
         components: [],
+        ephemeral: true,
       });
 
       const selections = selectedValues.map((value) => JSON.parse(value));
@@ -49,6 +50,7 @@ export const buttons = {
       if (selections.length === 0) {
         await interaction.editReply({
           content: "No inscription ID selected.",
+          ephemeral: true,
         });
         return;
       }
@@ -111,9 +113,11 @@ export const buttons = {
       });
     } catch (error) {
       console.error(error);
-      await interaction.reply(
-        "There was an error creating the role. Please try again later."
-      );
+      await interaction.reply({
+        content:
+          "There was an error creating the role. Please try again later.",
+        ephemeral: true,
+      });
     }
   },
 
@@ -135,6 +139,7 @@ export const selectMenus = {
     await interaction.update({
       content: `Confirm the selection of the inscription **${namesString}** to reject`,
       components: [buttonsRow],
+      ephemeral: true,
     });
   },
 };
@@ -148,6 +153,7 @@ const execute = async (interaction) => {
   if (inscriptions.length === 0) {
     await interaction.reply({
       content: "There are no inscriptions to reject.",
+      ephemeral: true,
     });
     return;
   }
@@ -187,6 +193,7 @@ const execute = async (interaction) => {
   await interaction.reply({
     content: "Select an inscription to reject:",
     components: [selectMenuRow, cancelRow],
+    ephemeral: true,
   });
 };
 
