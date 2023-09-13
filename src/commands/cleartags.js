@@ -59,9 +59,9 @@ export const cleartags = async (interaction) => {
 
     members.forEach(async (member) => {
       const userRoles = member.roles.cache.filter((role) => {
+        console.log("userRoles - role:", role);
         return role.id !== everyoneRole && !exemptRoles.includes(role.name);
       });
-      console.log("userRoles - userRoles:", userRoles);
 
       await member.roles.remove(userRoles).catch(console.error);
     });
