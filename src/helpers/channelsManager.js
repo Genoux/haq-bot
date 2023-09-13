@@ -16,7 +16,13 @@ export const createApprovedChannel = async (
       },
       {
         id: role.id,
-        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.Speak], // Allow team role
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.Connect,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.Speak,
+        ], // Allow team role
       }
     ];
 

@@ -13,11 +13,11 @@ async function createRole(guild, roleName) {
     console.log("createRole - color:", color);
 
     const newRole = await guild.roles.create({
-        name: roleName,
-        color: color,
+      name: roleName,
+      color: color,
+      hoist: true
     });
     
-    // Return the new role object
     console.log('New role created:', newRole.name);
     return newRole;
 
