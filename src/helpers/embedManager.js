@@ -22,7 +22,7 @@ export const createTeamEmbed = (payload) => {
   const embed = new EmbedBuilder()
     .setTitle("New team registration")
     .setDescription(
-      `Team Name: **${payload.team_name || "N/A"}** - Elo: ${payload.elo}`
+      `Team Name: **${payload.team_name || "N/A"}**`
     )
     .setColor("#DCFC35")
     .setTimestamp();
@@ -38,10 +38,19 @@ export const createTeamEmbed = (payload) => {
 
   embed.addFields([
     {
-      name: "Team",
-      value:
-        "-----------------------------------------------------------------------",
+      name: "Elo",
+      value: payload.elo || "N/A",
       inline: false,
+    },
+    {
+      name: "Email",
+      value: payload.email,
+      inline: false,
+    },
+    {
+      name: "Team info",
+      value: "----------------------------------------------------------",
+      inline: false
     },
     { name: "Players", value: playersString, inline: true },
     { name: "Coaches", value: coachesString, inline: true },
