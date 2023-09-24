@@ -7,14 +7,12 @@ export const newMember = async (member) => {
     .select("team_name, players, coaches, substitutes, captain").eq('approved', true);
   
   for (const team of data) {
-    
     const allMembers = [...team.players, ...team.coaches, ...team.substitutes];
-    const matchingMember = allMembers.find((teamMember) =>
+    const matchingMember = allMembers.find((teamMember) => {
       teamMember.discord.toLowerCase() === member.user.username.toLowerCase()
-    );
+    });
     
     const isCaptain = team.captain.toLowerCase() === member.user.username.toLowerCase();
-    console.log("newMember - team.captain:", team.captain);
     
     if (matchingMember || isCaptain) {
       const normalizedTeamName = team.team_name.replace(/\s+/g, "").toLowerCase();

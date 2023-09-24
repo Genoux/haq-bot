@@ -5,13 +5,9 @@ const formatString = (arr, discordProp, ignProp, opggProp) => {
     arr
       .map((player) => {
         if (opggProp && player[opggProp]) {
-          return `${player[discordProp] || "N/A"} - [OP.GG](${
-            player[opggProp]
-          }) - ${player[ignProp] || "N/A"}`;
+          return `${player[discordProp] || "N/A"} - [OP.GG](${player[opggProp]  || "N/A"}) - ${player[ignProp] || "N/A"}`;
         } else {
-          return `${player[discordProp] || "N/A"} - ${
-            player[ignProp] || "N/A"
-          }`;
+          return `${player[discordProp] || "N/A"} - ${player[ignProp] || "N/A"}`;
         }
       })
       .join("\n") || "N/A"
@@ -36,6 +32,22 @@ export const createTeamEmbed = (payload) => {
   );
   const coachesString = formatString(payload.coaches, "discord", "IGN", "");
 
+  console.log([
+    {
+      name: "Elo",
+      value: payload.elo || "N/A",
+      inline: false,
+    },
+    {
+      name: "Email",
+      value: payload.email || "N/A",
+      inline: false,
+    },
+    { name: "Players", value: playersString || "N/A", inline: true },
+    { name: "Coaches", value: coachesString || "N/A", inline: true },
+    { name: "Substitutes", value: substitutesString || "N/A", inline: true },
+  ]);
+
   embed.addFields([
     {
       name: "Elo",
@@ -44,7 +56,7 @@ export const createTeamEmbed = (payload) => {
     },
     {
       name: "Email",
-      value: payload.email,
+      value: payload.email || "N/A",
       inline: false,
     },
     {
@@ -52,9 +64,9 @@ export const createTeamEmbed = (payload) => {
       value: "----------------------------------------------------------",
       inline: false
     },
-    { name: "Players", value: playersString, inline: true },
-    { name: "Coaches", value: coachesString, inline: true },
-    { name: "Substitutes", value: substitutesString, inline: true },
+    { name: "Players", value: playersString || "N/A", inline: true },
+    { name: "Coaches", value: coachesString || "N/A", inline: true },
+    { name: "Substitutes", value: substitutesString || "N/A", inline: true },
   ]);
 
   return embed;
