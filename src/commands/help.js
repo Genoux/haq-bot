@@ -3,7 +3,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 const ADMIN_USER_IDS = ["75069008939847680", "75778454401847296"]; // Add your admin IDs here
 
 const commandBuilder = new SlashCommandBuilder()
-  .setName("Aide")
+  .setName("aide")
   .setDescription("Envoyez une demande d'aide aux administrateurs.");
 
 const execute = async (interaction) => {
