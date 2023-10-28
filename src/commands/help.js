@@ -3,8 +3,8 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 const ADMIN_USER_IDS = ["75069008939847680", "75778454401847296"]; // Add your admin IDs here
 
 const commandBuilder = new SlashCommandBuilder()
-  .setName("help")
-  .setDescription("Send a help request to the admins.");
+  .setName("Aide")
+  .setDescription("Envoyez une demande d'aide aux administrateurs.");
 
 const execute = async (interaction) => {
   // Loop through the array of admin user IDs
@@ -15,11 +15,11 @@ const execute = async (interaction) => {
 
       // Send a DM to the admin user
       await adminUser.send(
-        `Help request from <@${interaction.user.id}> in <#1052660022800293908>`
+        `Demande d'aide de la part de <@${interaction.user.id}> in <#1052660022800293908>`
       );
     } catch (error) {
       console.error(
-        `Could not send help request to admin with ID ${adminId}.`,
+        `Impossible d'envoyer la demande d'aide à l'administrateur avec l'ID ${adminId}.`,
         error
       );
     }
@@ -27,7 +27,7 @@ const execute = async (interaction) => {
 
   // Reply to the user to confirm that the help request has been sent
   await interaction.reply({
-    content: "Your help request has been sent to the admins.",
+    content: "Votre demande d'aide a été envoyée aux administrateurs.",
     ephemeral: true,
   });
 };
