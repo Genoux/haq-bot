@@ -53,7 +53,7 @@ if (process.env.DRAFT_WEBHOOK === "true") {
       {
         event: "INSERT",
         schema: "public",
-        table: "inscriptions",
+        table: "teams",
       },
       ({ new: payload }) => {
         // Create an embed from the payload
