@@ -1,7 +1,7 @@
 // In a file named `showTeams.js`
 import { SlashCommandBuilder } from '@discordjs/builders';
 import supabaseModule from "../supabase.js";
-const { haq_database } = supabaseModule;
+const { live_tournament } = supabaseModule;
 import { opggEmbed } from '../helpers/embedManager.js';
 
 const commandBuilder = new SlashCommandBuilder()
@@ -11,15 +11,14 @@ const commandBuilder = new SlashCommandBuilder()
 const execute = async (interaction) => {
   try {
     // Fetch all approved teams from the Supabase database
-    const { data, error } = await haq_database
-      .from('inscriptions') // Replace 'teams' with your actual table name
+    const { data, error } = await live_tournament
+      .from('teams') // Replace 'teams' with your actual table name
       .select('*')
-      .eq('approved', true);
     
     if (error) {
       console.error('Supabase Error:', error);
       await interaction.reply('Failed to fetch teams.');
-      return;
+      throw error;
     }
 
     if (data.length === 0) {
@@ -28,14 +27,18 @@ const execute = async (interaction) => {
     }
 
     // Generate the message content
-    let messageContent = '';
-    for (const team of data) {
-      messageContent += `**Team: ${team.team_name}**\n`; // Replace 'name' with your actual column name for the team name
-      for (const player of team.players) {
-        messageContent += `- ${player.ign}: [OPGG](${player.opgg})\n`;
-      }
-      messageContent += '\n';
-    }
+    // let messageContent = '';
+    // for (const team of data) {
+    //   console.log("execute - team:", team);
+    //   messageContent += `**Team: ${team.name}**\n`; // Replace 'name' with your actual column name for the team name
+    //   if (team.players.length === 0) {
+    //     messageContent += 'No players found.\n';
+    //   }
+    //   for (const player of team.players) {
+    //     messageContent += `- ${player.ign}: [OPGG](${player.opgg})\n`;
+    //   }
+    //   messageContent += '\n';
+    // }
 
   // Generate the embed
 const teamEmbed = opggEmbed(data);

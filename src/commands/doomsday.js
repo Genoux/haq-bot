@@ -4,9 +4,9 @@ import discord, {
   ButtonBuilder,
   ChannelType,
 } from "discord.js";
-import { resetchannels } from "./resetchannels.js";
-import { cleartags } from "./cleartags.js";
-import { deleteRoles } from "./deleteroles.js";
+import { resetchannels } from "./tools/resetchannels.js";
+import { cleartags } from "./tools/cleartags.js";
+import { deleteRoles } from "./tools/deleteroles.js";
 
 export const buttons = {
   doomsday_confirm: async (interaction) => {

@@ -18,7 +18,7 @@ if (process.env.DRAFT_WEBHOOK === "true") {
       "postgres_changes",
       {
         event: "UPDATE",
-        schema: "public",
+        schema: "aram_draft_pick",
         table: "rooms",
       },
       async ({ new: payload }) => {
@@ -52,7 +52,7 @@ if (process.env.DRAFT_WEBHOOK === "true") {
       "postgres_changes",
       {
         event: "INSERT",
-        schema: "public",
+        schema: "live_tournament",
         table: "teams",
       },
       ({ new: payload }) => {

@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { createRole } from "../helpers/roleManager.js"; // Adjust the path as needed
+import { createRole } from "../../helpers/roleManager.js"; // Adjust the path as needed
 
 const commandBuilder = new SlashCommandBuilder()
   .setName("createrole")
