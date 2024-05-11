@@ -71,7 +71,7 @@ export const buttons = {
 
         if (error) {
           console.error("Error updating inscription:", error);
-          hasErrorOccurred = true;
+          throw new Error("An error occurred while updating the inscription.");
         }
       }
 

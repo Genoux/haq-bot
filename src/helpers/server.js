@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 
 const app = express();
-const PORT = 3002; // Choose an appropriate port
+const PORT = process.env.PORT || 3002; // Dynamically assign port
 
 app.use(bodyParser.json());
 
@@ -13,5 +13,7 @@ app.get("/", async (req, res) => {
 export function server() {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+  }).on('error', (err) => {
+    console.error('Error starting server:', err);
   });
 }

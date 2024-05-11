@@ -11,15 +11,15 @@
   },
   "type": "module",
   "name": "haq-bot",
-  "description": "",
+  "description": "A Discord bot for HAQ discord server.",
   "version": "1.1.0",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "John Barry",
+  "license": "",
   "devDependencies": {
     "ts-node": "^10.9.1"
   }
