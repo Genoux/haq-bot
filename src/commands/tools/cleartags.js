@@ -54,7 +54,7 @@ const execute = async (interaction) => {
 };
 
 export const cleartags = async (interaction) => {
-  const exemptRoles = ["Mod", "Hosts", "haq-bot"];
+  const exemptRoles = ["Mod", "Hosts"];
 
   const members = await interaction.guild.members.fetch();
   try {

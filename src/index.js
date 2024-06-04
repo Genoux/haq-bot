@@ -29,6 +29,8 @@ const selectMenuHandlers = {};
 
 client.on("ready", async () => {
   console.log(`${client.user.tag} has logged in!`);
+  const guildName = await client.guilds.cache.get(GUILD_ID).name;
+  console.log(`Guild name: ${guildName}`);
   await client.guilds.cache.get(GUILD_ID).commands.fetch();
   await server();
   //subscribe(client);

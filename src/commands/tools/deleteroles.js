@@ -57,9 +57,10 @@ export const deleteRoles = async (interaction) => {
     "1141113852575100979",
     "465163371742756874",
   ];
+  const rolesToKeep2 = ["Mod", "Hosts", "haq-bot", "@everyone"];
 
   const rolesToDelete = interaction.guild.roles.cache.filter((role) => {
-    return !rolesToKeep.includes(role.id);
+    return !rolesToKeep2.includes(role.name);
   });
 
   for (const [roleId, role] of rolesToDelete) {
@@ -67,7 +68,7 @@ export const deleteRoles = async (interaction) => {
       await role.delete();
       console.log(`Deleted role ${role.name}`);
     } catch (error) {
-      console.error(`Failed to delete role ${roleId}: `, error);
+      console.error(`Failed to delete role ${role.name}: `, error);
     }
   }
 };

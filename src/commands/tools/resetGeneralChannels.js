@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import discord, { ActionRowBuilder, ButtonBuilder } from "discord.js";
+import discord, { ActionRowBuilder, ButtonBuilder, ChannelType } from "discord.js";
 
 export const buttons = {
   reset_confirm: async (interaction) => {
@@ -52,12 +52,11 @@ const execute = async (interaction) => {
 export const resetchannels = async (interaction) => {
   try {
     // The ID of the desired category (sub-dropdown)
-    const categoryIds = ["1080911803854356670", "1109480250108289124"];
+    const categoryIds = ["1247344021739667486"];
 
     for (const categoryId of categoryIds) {
       // Get the category channel by its ID
       const category = interaction.guild.channels.cache.get(categoryId);
-
       if (!category) {
         console.log(`Category with ID ${categoryId} not found!`);
         continue;
@@ -70,18 +69,33 @@ export const resetchannels = async (interaction) => {
         (ch) => ch.parentId === categoryId
       );
 
+      if (!channels.size) {
+        console.log(`No channels found in category with ID ${categoryId}`);
+        continue;
+      }
+
       // Iterate through the channels and delete them
       for (const [index, channel] of channels.entries()) {
         console.log(
-          `Deleting channel with Index: ${index}, Name: ${channel.name}`
+          `Resetting channel ${channel.name}`
         );
 
-        // Delete the channel
-        await channel.delete().catch(console.error);
+        if (channel.type === ChannelType.GuildText) {
+          // Clone the channel
+          const newChannel = await channel.clone().catch(console.error);
+
+          // Delete the old channel
+          await channel.delete().catch(console.error);
+
+          // Optionally: Set the position of the new channel to match the old one
+          if (newChannel) {
+            await newChannel.setPosition(channel.position).catch(console.error);
+          }
+        }
       }
     }
   } catch (error) {
-    console.error("Error in cleartags:", error);
+    console.error("Error in resetchannels:", error);
   }
 };
 

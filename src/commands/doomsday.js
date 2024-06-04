@@ -4,32 +4,53 @@ import discord, {
   ButtonBuilder,
   ChannelType,
 } from "discord.js";
-import { resetchannels } from "./tools/resetchannels.js";
+import { resetchannels } from "./tools/resetGeneralChannels.js";
+import { deletechannels } from "./tools/deleteTeamsChannels.js";
 import { cleartags } from "./tools/cleartags.js";
 import { deleteRoles } from "./tools/deleteroles.js";
 
 export const buttons = {
   doomsday_confirm: async (interaction) => {
-    await interaction.deferUpdate();
+    try {
+      await interaction.deferUpdate();
 
-    await interaction.editReply({
-      content: "Loading...",
-      components: [],
-    });
+      await interaction.editReply({
+        content: "Loading...",
+        components: [],
+        ephemeral: true,
+      });
 
-    await doomsday(interaction);
-    await resetchannels(interaction);
-    await cleartags(interaction);
-    await deleteRoles(interaction);
+      // Execute the operations concurrently
+      await Promise.all([
+        deletechannels(interaction),
+        resetchannels(interaction),
+        deleteRoles(interaction),
+      ]);
 
-    await interaction.editReply({
-      content: "Doomsday reset done!",
-      components: [],
-      ephemeral: true,
-    });
+      await interaction.editReply({
+        content: "Doomsday reset done!",
+        components: [],
+        ephemeral: true,
+      });
+    } catch (error) {
+      console.error("Error handling button: doomsday_confirm", error);
+      if (error.code === 10008) {
+        // Handle specific error code (Unknown Message)
+        console.error("The message was not found. It might have been deleted.");
+      }
+      // Optionally, reply with an error message to the user
+      await interaction.followUp({
+        content: "An error occurred while processing your request.",
+        ephemeral: true,
+      });
+    }
   },
   doomsday_cancel: async (interaction) => {
-    await interaction.message.delete();
+    try {
+      await interaction.message.delete();
+    } catch (error) {
+      console.error("Error handling button: doomsday_cancel", error);
+    }
   },
 };
 
@@ -54,33 +75,6 @@ const execute = async (interaction) => {
       "Are you sure you want to initiate the Doomsday command? This will clear all channels and messages in the specified categories and cannot be undone.",
     components: [row],
     ephemeral: true,
-  });
-};
-
-const doomsday = async (interaction) => {
-  const categoryId = ["1141068228324499556"];
-
-  let categoryChannels = interaction.guild.channels.cache.filter(
-    (c) => c.parentId == categoryId
-  );
-
-  if (!categoryChannels) {
-    throw new Error(`Category with ID ${categoryId} not found!`);
-  }
-
-  categoryChannels.forEach(async (channel) => {
-    if (channel.type === ChannelType.GuildText) {
-      // Clone the channel
-      const newChannel = await channel.clone().catch(console.error);
-
-      // Delete the old channel
-      await channel.delete().catch(console.error);
-
-      // Optionally: You might want to set the position of the new channel to match the old one
-      if (newChannel) {
-        await newChannel.setPosition(channel.position).catch(console.error);
-      }
-    }
   });
 };
 
