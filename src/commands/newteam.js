@@ -1,5 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChannelType, PermissionsBitField } from 'discord.js';
+import { ChannelType,   StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder, } from 'discord.js';
+import supabaseModule from "../supabase.js";
+const { live_tournament } = supabaseModule; // Adjust this import to where your supabase client is initialized
+import { createRole } from "../helpers/roleManager.js";
+import { createTeamChannel } from "../helpers/channelManager.js";
 
 const commandBuilder = new SlashCommandBuilder()
   .setName('newteam')
@@ -11,19 +16,29 @@ const commandBuilder = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-const getRandomColor = () => {
-  return Math.floor(Math.random() * 16777215).toString(16);
-};
-
 const execute = async (interaction) => {
   const teamName = interaction.options.getString('team_name');
+  const { data: inscriptions, error } = await live_tournament
+  .from("inscriptions")
+  .select("*")
+  
+  console.log(inscriptions)
 
   try {
     const newTeam = await createTeam(interaction, teamName);
-    await interaction.reply({
-      content: `Team **${newTeam.name}** created successfully!`,
-      ephemeral: true,
-    });
+    console.log(newTeam)
+    if (newTeam) {
+      await interaction.reply({
+        content: `Team **${newTeam.name}** created successfully!`,
+        ephemeral: true,
+      });
+    }else {
+      await interaction.reply({
+        content: "Team already exist.",
+        ephemeral: true,
+      });
+    }
+
   } catch (error) {
     console.error(error);
     await interaction.reply({
@@ -37,49 +52,16 @@ const createTeam = async (interaction, teamName) => {
   const textCategoryId = '1247335698114023434'; // replace with your actual text category ID
   const voiceCategoryId = '1247335698114023435'; // replace with your actual voice category ID
 
-  const teamRole = await interaction.guild.roles.create({
-    name: teamName,
-    color: `#${getRandomColor()}`,
-    mentionable: true,
-  });
-
-  // Deny all permissions except ViewChannel for everyone
-  const everyonePermissions = {
-    id: interaction.guild.roles.everyone.id,
-    deny: PermissionsBitField.All,
-    allow: PermissionsBitField.Flags.ViewChannel,
-  };
-
-  // Allow necessary permissions for the team role
-  const teamRolePermissions = {
-    id: teamRole.id,
-    allow: [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.SendMessages,
-      PermissionsBitField.Flags.AddReactions,
-      PermissionsBitField.Flags.ReadMessageHistory,
-      PermissionsBitField.Flags.Connect,
-      PermissionsBitField.Flags.Speak,
-    ],
-  };
-
-  const teamChannel = await interaction.guild.channels.create({
-    name: teamName,
-    type: ChannelType.GuildText,
-    parent: textCategoryId,
-    permissionOverwrites: [everyonePermissions, teamRolePermissions],
-  });
-
-  const voiceChannel = await interaction.guild.channels.create({
-    name: teamName,
-    type: ChannelType.GuildVoice,
-    parent: voiceCategoryId,
-    permissionOverwrites: [everyonePermissions, teamRolePermissions],
-  });
+  const teamRole = await createRole(interaction, teamName)
+  if (!teamRole) {
+    return null;
+  }
+  const textChannel = await createTeamChannel(interaction, textCategoryId, teamName, ChannelType.GuildText, teamRole)
+  const voiceChannel = await createTeamChannel(interaction, voiceCategoryId, teamName, ChannelType.GuildVoice, teamRole)
 
   return {
     name: teamName,
-    channel: teamChannel,
+    channel: textChannel,
     voiceChannel: voiceChannel,
     role: teamRole,
   };

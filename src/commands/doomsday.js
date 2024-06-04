@@ -2,12 +2,9 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import discord, {
   ActionRowBuilder,
   ButtonBuilder,
-  ChannelType,
 } from "discord.js";
-import { resetchannels } from "./tools/resetGeneralChannels.js";
-import { deletechannels } from "./tools/deleteTeamsChannels.js";
-import { cleartags } from "./tools/cleartags.js";
-import { deleteRoles } from "./tools/deleteroles.js";
+import { deleteAllTeamsChannels, resetGeneralChannels } from "../helpers/channelManager.js";
+import { deleteAllRoles, clearAllRoles } from "../helpers/roleManager.js";
 
 export const buttons = {
   doomsday_confirm: async (interaction) => {
@@ -22,9 +19,10 @@ export const buttons = {
 
       // Execute the operations concurrently
       await Promise.all([
-        deletechannels(interaction),
-        resetchannels(interaction),
-        deleteRoles(interaction),
+        deleteAllTeamsChannels(interaction),
+        resetGeneralChannels(interaction),
+        deleteAllRoles(interaction),
+        clearAllRoles(interaction),
       ]);
 
       await interaction.editReply({
