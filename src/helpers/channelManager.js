@@ -1,18 +1,29 @@
 import { PermissionsBitField, ChannelType } from "discord.js";
 
+const getCategoryByName = (guild, categoryName) => {
+  return guild.channels.cache.find(
+    channel => channel.type === ChannelType.GuildCategory && channel.name === categoryName
+  );
+};
+
 const createTeamChannel = async (
   interaction,
-  categoryId,
+  categoryName,
   channelName,
   channelType,
   teamRole
 ) => {
+  const category = getCategoryByName(interaction.guild, categoryName);
+  if (!category) {
+    console.log(`Category with name ${categoryName} not found!`);
+    return null;
+  }
+
   console.log(teamRole.id);
   try {
-
     // return if channel already exists
     const existingChannel = interaction.guild.channels.cache.find(
-      channel => channel.name === channelName && channel.parentId === categoryId
+      channel => channel.name === channelName && channel.parentId === category.id
     );
 
     if (existingChannel) {
@@ -23,7 +34,7 @@ const createTeamChannel = async (
     const channel = await interaction.guild.channels.create({
       name: channelName,
       type: channelType,
-      parent: categoryId,
+      parent: category.id,
       permissionOverwrites: [
         {
           id: interaction.guild.roles.everyone.id,
@@ -59,21 +70,17 @@ const createTeamChannel = async (
 
 const deleteAllTeamsChannels = async (interaction) => {
   try {
-    // The ID of the desired category (sub-dropdown)
-    const categoryIds = ["1247335698114023434", "1247335698114023435"];
+    const categoryNames = ["Voice Channels", "Text Channels"];
 
-    for (const categoryId of categoryIds) {
-      // Get the category channel by its ID
-      const category = interaction.guild.channels.cache.get(categoryId);
-
+    for (const categoryName of categoryNames) {
+      const category = getCategoryByName(interaction.guild, categoryName);
       if (!category) {
-        console.log(`Category with ID ${categoryId} not found!`);
-        continue; 
+        console.log(`Category with name ${categoryName} not found!`);
+        continue;
       }
 
-      // Filter channels that have this category as their parent
       const channels = interaction.guild.channels.cache.filter(
-        (ch) => ch.parentId === categoryId
+        (ch) => ch.parentId === category.id
       );
 
       if (channels.length === 0) {
@@ -81,11 +88,8 @@ const deleteAllTeamsChannels = async (interaction) => {
         return;
       }
 
-      // Iterate through the channels and delete them
       for (const [index, channel] of channels.entries()) { 
-        console.log(`Deleting channel with Index: ${index}, Name: ${channel.name}`);  
-
-        // Delete the channel
+        console.log(`Deleting channel with Name: ${channel.name}`);  
         await channel.delete().catch(console.error);
       }
     }
@@ -96,43 +100,34 @@ const deleteAllTeamsChannels = async (interaction) => {
 
 const resetGeneralChannels = async (interaction) => {
   try {
-    // The ID of the desired category (sub-dropdown)
-    const categoryIds = ["1247344021739667486"];
+    const categoryNames = ["General"];
 
-    for (const categoryId of categoryIds) {
-      // Get the category channel by its ID
-      const category = interaction.guild.channels.cache.get(categoryId);
+    for (const categoryName of categoryNames) {
+      const category = getCategoryByName(interaction.guild, categoryName);
       if (!category) {
-        console.log(`Category with ID ${categoryId} not found!`);
+        console.log(`Category with name ${categoryName} not found!`);
         continue;
       }
 
       console.log(`Resetting category: ${category.name}`);
 
-      // Filter channels that have this category as their parent
       const channels = interaction.guild.channels.cache.filter(
-        (ch) => ch.parentId === categoryId
+        (ch) => ch.parentId === category.id
       );
 
       if (!channels.size) {
-        console.log(`No channels found in category with ID ${categoryId}`);
+        console.log(`No channels found in category with name ${categoryName}`);
         continue;
       }
 
-      // Iterate through the channels and delete them
       for (const [index, channel] of channels.entries()) {
         console.log(
           `Resetting channel ${channel.name}`
         );
 
         if (channel.type === ChannelType.GuildText) {
-          // Clone the channel
           const newChannel = await channel.clone().catch(console.error);
-
-          // Delete the old channel
           await channel.delete().catch(console.error);
-
-          // Optionally: Set the position of the new channel to match the old one
           if (newChannel) {
             await newChannel.setPosition(channel.position).catch(console.error);
           }

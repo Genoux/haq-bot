@@ -5,7 +5,6 @@ const { live_tournament } = supabaseModule;
 
 export const newMember = async (member) => {
   const { data } = await live_tournament.from("teams").select("*");
-  console.log("newMember - data:", data);
 
   for (const team of data) {
     const allMembers = [...team.players, ...team.coaches, ...team.substitutes];

@@ -1,9 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ChannelType } from 'discord.js';
 import supabaseModule from "../supabase.js";
-const { live_tournament } = supabaseModule; // Adjust this import to where your supabase client is initialized
 import { createRole } from "../helpers/roleManager.js";
 import { createTeamChannel } from "../helpers/channelManager.js";
+
+const { live_tournament } = supabaseModule;
 
 const cancelButton = new ButtonBuilder()
   .setCustomId("newteam_cancel")
@@ -88,7 +89,6 @@ export const buttons = {
 export const selectMenus = {
   select_team: async (interaction) => {
     selectedTeamName = interaction.values[0];
-    console.log("Selected Team:", selectedTeamName);
 
     await interaction.update({
       content: `Confirm the selection of the team **${selectedTeamName}**.`,
@@ -145,15 +145,13 @@ const execute = async (interaction) => {
 };
 
 const createTeam = async (interaction, teamName) => {
-  const textCategoryId = '1247335698114023434'; // replace with your actual text category ID
-  const voiceCategoryId = '1247335698114023435'; // replace with your actual voice category ID
 
   const teamRole = await createRole(interaction, teamName);
   if (!teamRole) {
     return null;
   }
-  const textChannel = await createTeamChannel(interaction, textCategoryId, teamName, ChannelType.GuildText, teamRole);
-  const voiceChannel = await createTeamChannel(interaction, voiceCategoryId, teamName, ChannelType.GuildVoice, teamRole);
+  const textChannel = await createTeamChannel(interaction, 'Text Channels', teamName, ChannelType.GuildText, teamRole);
+  const voiceChannel = await createTeamChannel(interaction, 'Voice Channels', teamName, ChannelType.GuildVoice, teamRole);
 
   return {
     name: teamName,

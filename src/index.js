@@ -3,7 +3,6 @@ import { Client, GatewayIntentBits, Routes, Collection } from "discord.js";
 import { REST } from "@discordjs/rest";
 import { fileURLToPath } from "url";
 import { newMember } from "./helpers/memberManager.js";
-//import { subscribe } from "./helpers/subscription.js";
 import { server } from "./helpers/server.js";
 import fs from "fs";
 import path from "path";

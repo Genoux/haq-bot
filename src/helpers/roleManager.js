@@ -1,5 +1,3 @@
-import { PermissionsBitField } from "discord.js";
-
 /**
  * Creates a role with the given name and color in the specified guild
  * @param {*} interaction
@@ -19,7 +17,6 @@ async function createRole(interaction, roleName) {
     }
 
     const color = "#" + Math.floor(Math.random() * 0xffffff).toString(16);
-    console.log("createRole - color:", color);
 
     const newRole = await interaction.guild.roles.create({
       name: roleName,
