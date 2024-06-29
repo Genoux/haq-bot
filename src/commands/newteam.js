@@ -1,10 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ChannelType } from 'discord.js';
+import { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ChannelType } from 'discord.js';
 import supabaseModule from "../supabase.js";
 import { createRole } from "../helpers/roleManager.js";
 import { createTeamChannel } from "../helpers/channelManager.js";
 
-const { live_tournament } = supabaseModule;
+const { supabase } = supabaseModule;
 
 const cancelButton = new ButtonBuilder()
   .setCustomId("newteam_cancel")
@@ -26,7 +26,8 @@ let selectedTeamName = "";
 
 const commandBuilder = new SlashCommandBuilder()
   .setName("newteam")
-  .setDescription("Create a new team.");
+  .setDescription("Create a new team.")
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export const buttons = {
   newteam_confirm: async (interaction) => {
@@ -99,8 +100,17 @@ export const selectMenus = {
 };
 
 const execute = async (interaction) => {
-  const { data: teams, error } = await live_tournament
-    .from("teams")
+
+  if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true
+    });
+    return;
+  }
+
+  const { data: teams, error } = await supabase
+    .from("registrations")
     .select("*");
 
   if (error) {

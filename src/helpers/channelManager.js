@@ -100,7 +100,7 @@ const deleteAllTeamsChannels = async (interaction) => {
 
 const resetGeneralChannels = async (interaction) => {
   try {
-    const categoryNames = ["General"];
+    const categoryNames = ["Tournoi"];
 
     for (const categoryName of categoryNames) {
       const category = getCategoryByName(interaction.guild, categoryName);

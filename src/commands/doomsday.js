@@ -1,15 +1,21 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import discord, {
   ActionRowBuilder,
+  PermissionFlagsBits,
   ButtonBuilder,
 } from "discord.js";
-import { deleteAllTeamsChannels, resetGeneralChannels } from "../helpers/channelManager.js";
+import {
+  deleteAllTeamsChannels,
+  resetGeneralChannels,
+} from "../helpers/channelManager.js";
 import { deleteAllRoles, clearAllRoles } from "../helpers/roleManager.js";
 
 export const buttons = {
   doomsday_confirm: async (interaction) => {
     try {
       await interaction.deferUpdate();
+
+      const userId = interaction.user.id;
 
       await interaction.editReply({
         content: "Loading...",
@@ -34,7 +40,16 @@ export const buttons = {
       console.error("Error handling button: doomsday_confirm", error);
       if (error.code === 10008) {
         // Handle specific error code (Unknown Message)
-        console.error("The message was not found. It might have been deleted.");
+        try {
+          const user = await interaction.client.users.fetch(
+            interaction.user.id
+          );
+          await user.send(
+            "An error occurred while processing the Doomsday command."
+          );
+        } catch (dmError) {
+          console.error("Failed to send error DM to user", dmError);
+        }
       }
       // Optionally, reply with an error message to the user
       await interaction.followUp({
@@ -45,18 +60,50 @@ export const buttons = {
   },
   doomsday_cancel: async (interaction) => {
     try {
-      await interaction.message.delete();
+      await interaction.update({
+        content: "Doomsday command cancelled.",
+        components: [], // Remove any buttons
+        ephemeral: true,
+      });
     } catch (error) {
       console.error("Error handling button: doomsday_cancel", error);
+
+      if (error.code === 10008) {
+        try {
+          await interaction.followUp({
+            content: "Doomsday command cancelled.",
+            ephemeral: true,
+          });
+        } catch (followUpError) {
+          console.error("Error sending follow-up message:", followUpError);
+        }
+      }
     }
   },
 };
 
 const commandBuilder = new SlashCommandBuilder()
   .setName("doomsday")
-  .setDescription("The last day of the world's existence.");
+  .setDescription("The last day of the world's existence.")
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 const execute = async (interaction) => {
+  if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (interaction.channel.name !== "bot-cmd") {
+    await interaction.reply({
+      content: "This command can only be used in the #bot-cmd channel.",
+      ephemeral: true,
+    });
+    return;
+  }
+
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("doomsday_confirm")

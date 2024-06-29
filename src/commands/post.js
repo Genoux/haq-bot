@@ -3,7 +3,8 @@ import { EmbedBuilder } from 'discord.js';
 
 const commandBuilder = new SlashCommandBuilder()
   .setName('post_tournament_info')
-  .setDescription('Post tournament information to a specific channel');
+  .setDescription('Post tournament information to a specific channel')
+  .setDefaultMemberPermissions(0)
 
 const execute = async (interaction) => {
 
