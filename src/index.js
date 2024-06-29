@@ -2,8 +2,6 @@ import { config } from "dotenv";
 import { Client, GatewayIntentBits, Routes, Collection } from "discord.js";
 import { REST } from "@discordjs/rest";
 import { fileURLToPath } from "url";
-//import { newMember } from "./helpers/memberManager.js";
-//import { subscribe } from "./helpers/subscription.js";
 import { server } from "./helpers/server.js";
 import fs from "fs";
 import path from "path";
@@ -28,14 +26,15 @@ const selectMenuHandlers = {};
 
 client.on("ready", async () => {
   console.log(`${client.user.tag} has logged in!`);
+  const guildName = await client.guilds.cache.get(GUILD_ID).name;
+  console.log(`Guild name: ${guildName}`);
   await client.guilds.cache.get(GUILD_ID).commands.fetch();
   await server();
-  //subscribe(client);
 });
 
-// client.on("guildMemberAdd", async (member) => {
-//   await newMember(member);
-// });
+client.on("guildMemberAdd", async (member) => {
+  console.log(`${member.user.username} joined the server`);
+});
 
 function getCooldownKey(interaction) {
   if (interaction.isCommand()) {
