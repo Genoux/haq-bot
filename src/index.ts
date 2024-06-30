@@ -1,65 +1,89 @@
 import { config } from "dotenv";
-import { Client, GatewayIntentBits, Routes, Collection } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Routes,
+  Collection,
+  CommandInteraction,
+  ButtonInteraction,
+  StringSelectMenuInteraction,
+  Interaction,
+  GuildMember
+} from "discord.js";
 import { REST } from "@discordjs/rest";
-import { fileURLToPath } from "url";
-import { server } from "./helpers/server.js";
+import { server } from "./helpers/server";
 import fs from "fs";
 import path from "path";
 
 config();
 
-const TOKEN = process.env.TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
-const GUILD_ID = process.env.GUILD_ID;
+interface Command {
+  data: { name: string };
+  execute: (interaction: CommandInteraction) => Promise<void>;
+  cooldown?: number;
+  buttons?: Record<string, (interaction: ButtonInteraction) => Promise<void>>;
+  selectMenus?: Record<string, (interaction: StringSelectMenuInteraction) => Promise<void>>;
+}
 
-const cooldowns = new Map(); // Collection for storing cooldowns
+const TOKEN = process.env.TOKEN as string;
+const CLIENT_ID = process.env.CLIENT_ID as string;
+const GUILD_ID = process.env.GUILD_ID as string;
 
-export const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
-});
+const cooldowns: Map<string, number> = new Map();
 
-const commands = new Collection();
+export const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+
+if (!client) {
+  throw new Error("Client is not defined");
+}
+
+const commands: Collection<string, Command> = new Collection();
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
-const buttonHandlers = {};
-const selectMenuHandlers = {};
+const buttonHandlers: Record<string, (interaction: ButtonInteraction) => Promise<void>> = {};
+const selectMenuHandlers: Record<string, (interaction: StringSelectMenuInteraction) => Promise<void>> = {};
 
 client.on("ready", async () => {
-  console.log(`${client.user.tag} has logged in!`);
-  const guildName = await client.guilds.cache.get(GUILD_ID).name;
-  console.log(`Guild name: ${guildName}`);
-  await client.guilds.cache.get(GUILD_ID).commands.fetch();
+  console.log(`${client.user?.tag} has logged in!`);
+  const guild = client.guilds.cache.get(GUILD_ID);
+  if (guild) {
+    console.log(`Guild name: ${guild.name}`);
+    await guild.commands.fetch();
+  }
   await server();
 });
 
-client.on("guildMemberAdd", async (member) => {
+client.on("guildMemberAdd", async (member: GuildMember) => {
   console.log(`${member.user.username} joined the server`);
 });
 
-function getCooldownKey(interaction) {
+function getCooldownKey(interaction: Interaction): string {
   if (interaction.isCommand()) {
     return `${interaction.commandName}:${interaction.user.id}`;
   } else if (interaction.isButton() || interaction.isStringSelectMenu()) {
     return `${interaction.customId}:${interaction.user.id}`;
   }
+  return '';
 }
 
-async function handleCooldown(interaction, command) {
+async function handleCooldown(interaction: Interaction, command: Command): Promise<boolean> {
   const now = Date.now();
   const cooldownAmount = (command.cooldown || 3) * 1000;
 
   const key = getCooldownKey(interaction);
+  if (!key) return true;
 
-  if (cooldowns.has(key)) {
-    const expirationTime = cooldowns.get(key) + cooldownAmount;
+  const existingCooldown = cooldowns.get(key);
+  if (existingCooldown) {
+    const expirationTime = existingCooldown + cooldownAmount;
 
     if (now < expirationTime) {
       const timeLeft = (expirationTime - now) / 1000;
-      await interaction.reply(
-        `Please wait ${Math.floor(
-          timeLeft
-        )} more second(s) before reusing the \`${command.data.name}\` command.`
-      );
+      if (interaction.isRepliable()) {
+        await interaction.reply(
+          `Please wait ${Math.floor(timeLeft)} more second(s) before reusing the \`${command.data.name}\` command.`
+        );
+      }
       return false;
     }
   }
@@ -69,13 +93,12 @@ async function handleCooldown(interaction, command) {
   return true;
 }
 
-client.on("interactionCreate", async (interaction) => {
-  let command = null;
+client.on("interactionCreate", async (interaction: Interaction) => {
+  let command: Command | undefined = undefined;
 
   if (interaction.isCommand()) {
     command = commands.get(interaction.commandName);
   } else if (interaction.isButton() || interaction.isStringSelectMenu()) {
-    // Retrieve the associated command name from the customId, if set
     const parts = interaction.customId.split(":");
     if (parts.length > 1) {
       const commandName = parts[0];
@@ -89,16 +112,20 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     try {
-      await command.execute(interaction);
+      if (interaction.isCommand()) {
+        await command.execute(interaction);
+      }
     } catch (error) {
       console.error(
-        `Error executing command: ${interaction.commandName}.`,
+        `Error executing command: ${interaction.isCommand() ? interaction.commandName : 'unknown'}.`,
         error
       );
-      await interaction.reply({
-        content: "There was an error while executing this command!",
-        ephemeral: true,
-      });
+      if (interaction.isRepliable()) {
+        await interaction.reply({
+          content: "There was an error while executing this command!",
+          ephemeral: true,
+        });
+      }
     }
   } else if (interaction.isButton()) {
     const handler = buttonHandlers[interaction.customId];
@@ -136,10 +163,10 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-async function loadCommands(dirname) {
+async function loadCommands(dirname: string): Promise<Collection<string, Command>> {
   const commandFiles = fs
     .readdirSync(path.join(dirname, "./commands"))
-    .filter((file) => file.endsWith(".js"));
+    .filter((file) => file.endsWith(".ts"));
 
   for (const file of commandFiles) {
     const command = (await import(`./commands/${file}`)).default;
@@ -149,7 +176,7 @@ async function loadCommands(dirname) {
   return commands;
 }
 
-function registerHandlers(commands) {
+function registerHandlers(commands: Collection<string, Command>): void {
   for (const command of commands.values()) {
     if (command.selectMenus) {
       for (const [selectMenuId, handler] of Object.entries(
@@ -170,12 +197,12 @@ function registerHandlers(commands) {
     }
 
     if (command.cooldown) {
-      cooldowns.set(command.data.name, new Map());
+      cooldowns.set(command.data.name, 0);
     }
   }
 }
 
-async function registerCommands() {
+async function registerCommands(): Promise<void> {
   try {
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
       body: Array.from(commands.values()).map((cmd) => cmd.data),
@@ -185,20 +212,16 @@ async function registerCommands() {
   }
 }
 
-async function main() {
-  const dirname = path.dirname(fileURLToPath(import.meta.url));
+async function main(): Promise<void> {
+  const dirname = __dirname;
 
-  const commands = await loadCommands(dirname);
+  const loadedCommands = await loadCommands(dirname);
 
-  registerHandlers(commands);
+  registerHandlers(loadedCommands);
 
-  await registerCommands(commands);
+  await registerCommands();
 
-  // rest.delete(Routes.applicationCommand(CLIENT_ID, '1140452888578105447'))
-  // .then(() => console.log('Successfully deleted application command'))
-  // .catch(console.error);
-
-  client.login(process.env.TOKEN);
+  client.login(TOKEN);
 }
 
 main();
