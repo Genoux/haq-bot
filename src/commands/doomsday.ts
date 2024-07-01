@@ -29,12 +29,16 @@ export const buttons: ButtonHandlers = {
         components: [],
       });
       // Execute the operations concurrently
-      await Promise.all([
-        deleteAllTeamsChannels(interaction),
-        resetGeneralChannels(interaction),
-        deleteAllRoles(interaction),
-        clearAllRoles(interaction),
-      ]);
+      if (interaction.guild) {
+        await Promise.all([
+          deleteAllTeamsChannels(interaction),
+          resetGeneralChannels(interaction),
+          deleteAllRoles(interaction),
+          clearAllRoles(interaction),
+        ]);
+      } else {
+        throw new Error("This command can only be used in a guild.");
+      }
       await interaction.editReply({
         content: "Doomsday reset done!",
         components: [],
