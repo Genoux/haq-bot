@@ -3,17 +3,18 @@ import discord, {
   ActionRowBuilder,
   PermissionFlagsBits,
   ButtonBuilder,
-  Interaction,
-  CommandInteraction,
   ButtonInteraction,
   GuildMember,
-  ChatInputCommandInteraction
+  ChatInputCommandInteraction,
+  EmbedBuilder
 } from "discord.js";
 import {
-  deleteAllTeamsChannels,
-  resetGeneralChannels,
+  handleTeamsChannels,
+  handleGeneralChannels,
 } from "../helpers/channelManager";
-import { deleteAllRoles, clearAllRoles } from "../helpers/roleManager";
+import { 
+  handleRoles
+} from "../helpers/roleManager";
 
 interface ButtonHandlers {
   [key: string]: (interaction: ButtonInteraction) => Promise<void>;
@@ -23,42 +24,39 @@ export const buttons: ButtonHandlers = {
   doomsday_confirm: async (interaction: ButtonInteraction) => {
     try {
       await interaction.deferUpdate();
-      const userId = interaction.user.id;
-      await interaction.editReply({
-        content: "Loading...",
-        components: [],
-      });
-      // Execute the operations concurrently
+   
+      const loadingEmbed = new EmbedBuilder()
+      .setColor('#000000')
+        .setTitle('Executing doomsday...')
+        .setDescription(':robot:')
+      
+        await interaction.editReply({
+          embeds: [loadingEmbed],
+          components: [],
+        });
+
+      
       if (interaction.guild) {
-        await Promise.all([
-          deleteAllTeamsChannels(interaction),
-          resetGeneralChannels(interaction),
-          deleteAllRoles(interaction),
-          clearAllRoles(interaction),
+        const results = await Promise.all([
+          handleTeamsChannels(interaction),
+          handleGeneralChannels(interaction),
+          handleRoles(interaction),
         ]);
+        
+        const resultEmbed = new EmbedBuilder()
+          .setColor('#00FF00')
+          .setTitle('Doomsday done!')
+          .setDescription('All actions were performed successfully.')
+
+        await interaction.editReply({
+          embeds: [resultEmbed],
+          components: [],
+        });
       } else {
         throw new Error("This command can only be used in a guild.");
       }
-      await interaction.editReply({
-        content: "Doomsday reset done!",
-        components: [],
-      });
     } catch (error: any) {
       console.error("Error handling button: doomsday_confirm", error);
-      if (error.code === 10008) {
-        // Handle specific error code (Unknown Message)
-        try {
-          const user = await interaction.client.users.fetch(
-            interaction.user.id
-          );
-          await user.send(
-            "An error occurred while processing the Doomsday command."
-          );
-        } catch (dmError) {
-          console.error("Failed to send error DM to user", dmError);
-        }
-      }
-      // Optionally, reply with an error message to the user
       await interaction.followUp({
         content: "An error occurred while processing your request.",
         ephemeral: true,
@@ -69,20 +67,10 @@ export const buttons: ButtonHandlers = {
     try {
       await interaction.update({
         content: "Doomsday command cancelled.",
-        components: [], // Remove any buttons
+        components: [],
       });
     } catch (error: any) {
       console.error("Error handling button: doomsday_cancel", error);
-      if (error.code === 10008) {
-        try {
-          await interaction.followUp({
-            content: "Doomsday command cancelled.",
-            ephemeral: true,
-          });
-        } catch (followUpError) {
-          console.error("Error sending follow-up message:", followUpError);
-        }
-      }
     }
   },
 };
@@ -108,19 +96,36 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
     });
     return;
   }
+
+  // Generate preview
+  const deleteChannelsPreview = await handleTeamsChannels(interaction, true);
+  const resetGeneralChannelsPreview = await handleGeneralChannels(interaction, true);
+  const deleteRolesPreview = await handleRoles(interaction, true);
+
+  const embed = new EmbedBuilder()
+    .setColor('#FF0000')
+    .setTitle('Doomsday Contract')
+    .setDescription('The following actions will be performed:')
+    .addFields(
+      { name: 'Teams Channels to be deleted', value: deleteChannelsPreview || 'None', inline: false },
+      { name: 'Channels to be reset', value: resetGeneralChannelsPreview || 'None', inline: false },
+      { name: 'Roles', value: deleteRolesPreview || 'None', inline: false },
+    )
+    .setFooter({ text: 'Do you aggree to proceed with these actions?' });
+
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId("doomsday_confirm")
-      .setLabel("Yes")
-      .setStyle(discord.ButtonStyle.Primary),
+      .setLabel("Agree")
+      .setStyle(discord.ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId("doomsday_cancel")
       .setLabel("Cancel")
-      .setStyle(discord.ButtonStyle.Danger)
+      .setStyle(discord.ButtonStyle.Secondary)
   );
+
   await interaction.reply({
-    content:
-      "Are you sure you want to initiate the Doomsday command? This will clear all channels and messages in the specified categories and cannot be undone.",
+    embeds: [embed],
     components: [row],
     ephemeral: true,
   });
