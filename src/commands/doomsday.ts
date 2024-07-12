@@ -97,7 +97,6 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
 
-  // Generate preview
   const deleteChannelsPreview = await handleTeamsChannels(interaction, true);
   const resetGeneralChannelsPreview = await handleGeneralChannels(interaction, true);
   const rolesPreview = await handleRoles(interaction, true);

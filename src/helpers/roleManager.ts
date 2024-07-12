@@ -5,30 +5,39 @@ export const handleRoles = async (interaction: Interaction, previewOnly: boolean
   const rolesToClearOnly = ["Capitaine"];
   let result = "";
   
-  const rolesToHandle = interaction.guild!.roles.cache.filter(role => 
-    !rolesToKeep.includes(role.name) && role.name !== "@everyone"
+  const rolesToDelete = interaction.guild!.roles.cache.filter(role => 
+    !rolesToKeep.includes(role.name) && 
+    !rolesToClearOnly.includes(role.name) && 
+    role.name !== "@everyone"
   );
 
-  if (rolesToHandle.size === 0) {
+  if (rolesToDelete.size === 0) {
     return "None";
   }
 
-  for (const [roleId, role] of rolesToHandle) {
-    const action = rolesToClearOnly.includes(role.name) ? 'clear' : 'delete';
+  for (const [roleId, role] of rolesToDelete) {
+    result += `- ${role.name}\n`;
 
     if (!previewOnly) {
-      if (action === 'delete') {
-        try {
-          await role.delete();
-        } catch (error) {
-          console.error(`Failed to delete role ${role.name}: `, error);
-        }
-      } else {
-        const members = await interaction.guild!.members.fetch();
-        for (const [memberId, member] of members) {
-          if (member.roles.cache.has(roleId)) {
-            await member.roles.remove(role).catch(console.error);
-          }
+      try {
+        await role.delete();
+      } catch (error) {
+        console.error(`Failed to delete role ${role.name}: `, error);
+      }
+    }
+  }
+
+  // Handle roles to clear (but not show in preview)
+  if (!previewOnly) {
+    const rolesToClear = interaction.guild!.roles.cache.filter(role => 
+      rolesToClearOnly.includes(role.name)
+    );
+
+    const members = await interaction.guild!.members.fetch();
+    for (const [roleId, role] of rolesToClear) {
+      for (const [memberId, member] of members) {
+        if (member.roles.cache.has(roleId)) {
+          await member.roles.remove(role).catch(console.error);
         }
       }
     }
