@@ -4,55 +4,37 @@ export const handleRoles = async (interaction: Interaction, previewOnly: boolean
   const rolesToKeep = ["Mod", "Hosts", "haq-bot", "@everyone"];
   const rolesToClearOnly = ["Capitaine"];
   let result = "";
-  const members = await interaction.guild!.members.fetch();
+  
+  const rolesToHandle = interaction.guild!.roles.cache.filter(role => 
+    !rolesToKeep.includes(role.name) && role.name !== "@everyone"
+  );
 
-  const rolesToHandle = new Map<string, { action: 'delete' | 'clear', users: Set<string> }>();
-
-  interaction.guild!.roles.cache.forEach((role) => {
-    if (!rolesToKeep.includes(role.name)) {
-      rolesToHandle.set(role.name, {
-        action: rolesToClearOnly.includes(role.name) ? 'clear' : 'delete',
-        users: new Set()
-      });
-    }
-  });
-
-  for (const [memberId, member] of members) {
-    const userRoles = member.roles.cache.filter((role) =>
-      rolesToHandle.has(role.name)
-    );
-
-    userRoles.forEach(role => {
-      rolesToHandle.get(role.name)!.users.add(member.user.username);
-    });
-
-    if (!previewOnly) {
-      await member.roles.remove(userRoles).catch(console.error);
-    }
+  if (rolesToHandle.size === 0) {
+    return "None";
   }
 
-  for (const [roleName, { action, users }] of rolesToHandle) {
-    const userCount = users.size;
+  for (const [roleId, role] of rolesToHandle) {
+    const action = rolesToClearOnly.includes(role.name) ? 'clear' : 'delete';
 
-    if (userCount === 0) {
-      result += ``;
-    } else if (userCount <= 3) {
-      result += `- ${roleName} (to be removed from ${Array.from(users).join(', ')})\n`;
-    } else {
-      const sampleUsers = Array.from(users).slice(0, 2);
-      result += `- ${roleName} (to be removed from ${sampleUsers.join(', ')} and ${userCount - 2} others)\n`;
-    }
-
-    if (!previewOnly && action === 'delete') {
-      try {
-        await interaction.guild!.roles.cache.find(r => r.name === roleName)?.delete();
-      } catch (error) {
-        console.error(`Failed to delete role ${roleName}: `, error);
+    if (!previewOnly) {
+      if (action === 'delete') {
+        try {
+          await role.delete();
+        } catch (error) {
+          console.error(`Failed to delete role ${role.name}: `, error);
+        }
+      } else {
+        const members = await interaction.guild!.members.fetch();
+        for (const [memberId, member] of members) {
+          if (member.roles.cache.has(roleId)) {
+            await member.roles.remove(role).catch(console.error);
+          }
+        }
       }
     }
   }
 
-  return result;
+  return result.trim();
 };
 
 export async function createRole(interaction: Interaction, roleName: string): Promise<Role | null> {

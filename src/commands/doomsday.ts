@@ -100,7 +100,7 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
   // Generate preview
   const deleteChannelsPreview = await handleTeamsChannels(interaction, true);
   const resetGeneralChannelsPreview = await handleGeneralChannels(interaction, true);
-  const deleteRolesPreview = await handleRoles(interaction, true);
+  const rolesPreview = await handleRoles(interaction, true);
 
   const embed = new EmbedBuilder()
     .setColor('#FF0000')
@@ -109,9 +109,9 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
     .addFields(
       { name: 'Teams Channels to be deleted', value: deleteChannelsPreview || 'None', inline: false },
       { name: 'Channels to be reset', value: resetGeneralChannelsPreview || 'None', inline: false },
-      { name: 'Roles', value: deleteRolesPreview || 'None', inline: false },
+      { name: 'Roles to be deleted', value: rolesPreview || 'None', inline: false },
     )
-    .setFooter({ text: 'Do you aggree to proceed with these actions?' });
+    .setFooter({ text: 'Do you agree to proceed with these actions?' });
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
