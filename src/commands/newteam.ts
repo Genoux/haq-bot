@@ -123,6 +123,14 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
 
+  if (!interaction.channel || !('name' in interaction.channel) || interaction.channel.name !== "bot-cmd") {
+    await interaction.reply({
+      content: "This command can only be used in the #bot-cmd channel.",
+      ephemeral: true,
+    });
+    return;
+  }
+
   const { data: teams, error } = await supabase
     .from("registrations")
     .select("*");

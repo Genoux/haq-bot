@@ -2,8 +2,6 @@ import {
   PermissionsBitField, 
   ChannelType, 
   Guild, 
-  GuildBasedChannel, 
-  CommandInteraction, 
   CategoryChannel,
   TextChannel,
   VoiceChannel,
@@ -17,7 +15,75 @@ const getCategoryByName = (guild: Guild, categoryName: string): CategoryChannel 
   ) as CategoryChannel | undefined;
 };
 
-const createTeamChannel = async (
+export const handleTeamsChannels = async (interaction: Interaction, previewOnly: boolean = false): Promise<string> => {
+  const categoryNames = ["Text Channels", "Voice Channels"];
+  let result = "";
+
+  for (const categoryName of categoryNames) {
+    const category = getCategoryByName(interaction.guild!, categoryName);
+    if (!category) continue;
+
+    result += `${categoryName}:\n`;
+
+    const channels = interaction.guild!.channels.cache
+      .filter((ch): ch is TextChannel | VoiceChannel => ch.parentId === category.id && 'position' in ch)
+      .sort((a, b) => a.position - b.position);
+    
+    if(channels.size === 0) {
+      result += '';
+      continue;
+    }
+    
+    for (const channel of channels.values()) {
+      result += `- ${channel.name}\n`;
+      if (!previewOnly) {
+        await channel.delete().catch(console.error);
+      }
+    }
+  }
+
+  return result.trim();
+};
+
+export const handleGeneralChannels = async (interaction: Interaction, previewOnly: boolean = false): Promise<string> => {
+  const categoryNames = ["Tournoi"];
+  let result = "";
+
+  for (const categoryName of categoryNames) {
+    const category = getCategoryByName(interaction.guild!, categoryName);
+    if (!category) continue;
+
+    const channels = interaction.guild!.channels.cache.filter(
+      (ch): ch is TextChannel => ch.parentId === category.id && ch.type === ChannelType.GuildText
+    );
+
+    if(channels.size === 0) {
+      result += '';
+      continue;
+    }
+
+    for (const channel of channels.values()) {
+      result += `- ${channel.name}\n`;
+      if (!previewOnly) {
+        try {
+          const newChannel = await channel.clone({
+            reason: "Channel reset as part of general channels reset"
+          });
+          await channel.delete();
+          if (newChannel.position !== undefined) {
+            await newChannel.setPosition(channel.position);
+          }
+        } catch (error) {
+          console.error(`Error resetting channel ${channel.name}:`, error);
+        }
+      }
+    }
+  }
+
+  return result;
+};
+
+export const createTeamChannel = async (
   interaction: Interaction,
   categoryName: string,
   channelName: string,
@@ -32,7 +98,6 @@ const createTeamChannel = async (
 
   console.log(teamRole.id);
   try {
-    // return if channel already exists
     const existingChannel = interaction.guild!.channels.cache.find(
       channel => channel.name === channelName && channel.parentId === category.id
     );
@@ -81,76 +146,3 @@ const createTeamChannel = async (
     throw new Error("There was an error creating the channel.");
   }
 };
-
-const deleteAllTeamsChannels = async (interaction: Interaction): Promise<void> => {
-  try {
-    const categoryNames = ["Voice Channels", "Text Channels"];
-
-    for (const categoryName of categoryNames) {
-      const category = getCategoryByName(interaction.guild!, categoryName);
-      if (!category) {
-        console.log(`Category with name ${categoryName} not found!`);
-        continue;
-      }
-
-      const channels = interaction.guild!.channels.cache.filter(
-        (ch) => ch.parentId === category.id
-      );
-
-      if (channels.size === 0) {
-        console.log(`No channels found in category ${category.name}`);
-        return;
-      }
-
-      for (const channel of channels.values()) { 
-        console.log(`Deleting channel with Name: ${channel.name}`);  
-        await channel.delete().catch(console.error);
-      }
-    }
-  } catch (error) { 
-    console.error("Error in cleartags:", error);
-  }
-};
-
-const resetGeneralChannels = async (interaction: Interaction): Promise<void> => {
-  try {
-    const categoryNames = ["Tournoi"];
-
-    for (const categoryName of categoryNames) {
-      const category = getCategoryByName(interaction.guild!, categoryName);
-      if (!category) {
-        console.log(`Category with name ${categoryName} not found!`);
-        continue;
-      }
-
-      console.log(`Resetting category: ${category.name}`);
-
-      const channels = interaction.guild!.channels.cache.filter(
-        (ch) => ch.parentId === category.id
-      );
-
-      if (!channels.size) {
-        console.log(`No channels found in category with name ${categoryName}`);
-        continue;
-      }
-
-      for (const channel of channels.values()) {
-        console.log(
-          `Resetting channel ${channel.name}`
-        );
-
-        if (channel.type === ChannelType.GuildText) {
-          const newChannel = await (channel as TextChannel).clone().catch(console.error);
-          await channel.delete().catch(console.error);
-          if (newChannel) {
-            await newChannel.setPosition(channel.position).catch(console.error);
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error in resetchannels:", error);
-  }
-};
-
-export { createTeamChannel, deleteAllTeamsChannels, resetGeneralChannels };

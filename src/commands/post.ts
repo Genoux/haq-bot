@@ -1,4 +1,3 @@
-
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder, ChatInputCommandInteraction, TextChannel, GuildMember } from 'discord.js';
 
@@ -15,7 +14,6 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
 
-  // Replace 'your-channel-id' with the actual channel ID where you want to post the message
   const channelId = '1252755989954822215';
   const channel = interaction.guild?.channels.cache.get(channelId) as TextChannel | undefined;
 
@@ -31,7 +29,6 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
       `**Bonjour à toutes et à tous, veuillez prendre connaissance du fonctionnement du tournoi ci-dessous.**
 
       _Capitaines, connectez-vous à 18h sur le channel ⁠Info pour un rappel des règles. Merci à toutes et à tous._
-
 **Format**
 
 Double élimination avec winner et loser bracket. Demi-finales et finale en BO3, autres matchs en BO1.
